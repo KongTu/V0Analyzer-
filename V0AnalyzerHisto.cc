@@ -318,7 +318,7 @@ V0AnalyzerHisto::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
     if(bestvz < -15.0 || bestvz>15.0) return;
 
 //multiplicity bins:
-    if (nTracks < 185 || nTracks > 220) return;
+    if (nTracks < 220 || nTracks > 260) return;
 
 
   for(unsigned it=0; it<v0candidates_ks->size(); ++it){     
@@ -400,7 +400,7 @@ V0AnalyzerHisto::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
           
           if ( dau1_Nhits > 3 && dau2_Nhits > 3 && dlos > 5 && agl > 0.999 && TMath::Abs(dzos1) > 1 && TMath::Abs(dzos2) > 1 && TMath::Abs(dxyos1) > 1 && TMath::Abs(dxyos2) > 1){
 
-              if (ks_pt > 0.2 && ks_pt < 0.4)
+              if (ks_pt > 0.7 && ks_pt < 1.0)
               {
                 InvMass_ks_nocut[0]->Fill(ks_mass);
                   double temp = Mass_ks(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
@@ -411,7 +411,7 @@ V0AnalyzerHisto::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
                         InvMass_ks[0]->Fill(ks_mass);
               }
 
-            if (ks_pt > 0.4 && ks_pt < 0.6)
+            if (ks_pt > 1.0 && ks_pt < 1.4)
               {
                 InvMass_ks_nocut[1]->Fill(ks_mass);
                   double temp = Mass_ks(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
@@ -422,7 +422,7 @@ V0AnalyzerHisto::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
                         InvMass_ks[1]->Fill(ks_mass);
               }
 
-            if (ks_pt > 0.6 && ks_pt < 0.8)
+            if (ks_pt > 1.4 && ks_pt < 1.8)
               {
                 InvMass_ks_nocut[2]->Fill(ks_mass);
                   double temp = Mass_ks(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
@@ -433,7 +433,7 @@ V0AnalyzerHisto::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
                         InvMass_ks[2]->Fill(ks_mass);
               }
 
-              if (ks_pt > 0.8 && ks_pt < 1.0)
+              if (ks_pt > 1.8 && ks_pt < 2.2)
               {
                 InvMass_ks_nocut[3]->Fill(ks_mass);
                   double temp = Mass_ks(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
@@ -444,7 +444,7 @@ V0AnalyzerHisto::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
                         InvMass_ks[3]->Fill(ks_mass);
               }
 
-              if (ks_pt > 1.0 && ks_pt < 1.4)
+              if (ks_pt > 2.2 && ks_pt < 2.8)
                 {
                  InvMass_ks_nocut[4]->Fill(ks_mass);
                   double temp = Mass_ks(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
@@ -456,7 +456,7 @@ V0AnalyzerHisto::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
                 }
 
 
-              if (ks_pt > 1.4 && ks_pt < 1.8)
+              if (ks_pt > 2.8 && ks_pt < 3.6)
                 {
                   InvMass_ks_nocut[5]->Fill(ks_mass);
                     double temp = Mass_ks(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
@@ -467,7 +467,7 @@ V0AnalyzerHisto::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
                           InvMass_ks[5]->Fill(ks_mass);
                 }
 
-              if (ks_pt > 1.8 && ks_pt < 2.2)
+              if (ks_pt > 3.6 && ks_pt < 4.6)
                 {
                   InvMass_ks_nocut[6]->Fill(ks_mass);
                     double temp = Mass_ks(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
@@ -478,7 +478,7 @@ V0AnalyzerHisto::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
                           InvMass_ks[6]->Fill(ks_mass);
                 }
 
-              if (ks_pt > 2.2 && ks_pt < 2.8)
+              if (ks_pt > 4.6 && ks_pt < 6.0)
                 {
                   InvMass_ks_nocut[7]->Fill(ks_mass);
                     double temp = Mass_ks(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
@@ -489,7 +489,7 @@ V0AnalyzerHisto::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
                           InvMass_ks[7]->Fill(ks_mass);
                 }
 
-              if (ks_pt > 2.8 && ks_pt < 3.6)
+              if (ks_pt > 6.0 && ks_pt < 9.0)
                 {
                   InvMass_ks_nocut[8]->Fill(ks_mass);
                     double temp = Mass_ks(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
@@ -500,7 +500,7 @@ V0AnalyzerHisto::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
                           InvMass_ks[8]->Fill(ks_mass);
                 }
 
-              if (ks_pt > 3.6 && ks_pt < 4.6)
+              if (ks_pt > 9.0 && ks_pt < 12.0)
                 {
                   InvMass_ks_nocut[9]->Fill(ks_mass);
                     double temp = Mass_ks(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);

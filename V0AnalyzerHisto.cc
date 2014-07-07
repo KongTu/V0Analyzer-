@@ -4,7 +4,7 @@
   //   [Notes on implementation]
 
 //
-// Original Author:  Sudhir Malik,8 R-016,+41227670861,
+// Original Author:  Zhoudunming Tu,
 //         Created:  Mon Jun 13 20:56:30 CEST 2011
 // $Id$
 //

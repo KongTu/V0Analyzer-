@@ -225,6 +225,17 @@ V0AnalyzerHistoInJet::~V0AnalyzerHistoInJet()
 // member functions
 //==================
 
+/**
+ * [Mass_ks calculate the Lambda mass if we assume one daughter is proton instead of Pion]
+ * @param  px_1
+ * @param  py_1
+ * @param  pz_1
+ * @param  px_2
+ * @param  py_2
+ * @param  pz_2
+ * @return
+ */
+
 double Mass_ks(double px_1,double py_1,double pz_1,double px_2,double py_2,double pz_2)
 {
        
@@ -328,9 +339,11 @@ V0AnalyzerHistoInJet::analyze(const edm::Event& iEvent, const edm::EventSetup& i
 //first selection; vertices
     if(bestvz < -15.0 || bestvz>15.0) return;
 
-//multiplicity bins:
-//multiplicity bins:
-//multiplicity bins:
+/**
+ * The First one is [ks_0_underlying_yield] (same for lambda) which is 
+ * for all the mulitiplicity, and inside of PFjet (R=0.3)  
+ *
+ */
 
     for(unsigned it=0; it<v0candidates_ks->size(); ++it){
     
@@ -774,7 +787,6 @@ V0AnalyzerHistoInJet::analyze(const edm::Event& iEvent, const edm::EventSetup& i
     
     }
   
-
     if (nTracks > 150 && nTracks < 185){
 
         for(unsigned it=0; it<v0candidates_ks->size(); ++it){     

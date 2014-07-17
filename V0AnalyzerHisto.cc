@@ -173,10 +173,17 @@ private:
   std::string jetSrc_;
   edm::InputTag genParticleSrc_;
 
-  TH1D* InvMass_la[10];
-  TH1D* InvMass_ks_underlying[10];
-  TH1D* InvMass_la_underlying[10];
-  TH1D* InvMass_ks[10];
+  TH1D* InvMass_ks_0_underlying[10];
+  TH1D* InvMass_la_0_underlying[10];
+
+  TH1D* InvMass_ks_1_underlying[10];
+  TH1D* InvMass_la_1_underlying[10];
+  
+  TH1D* InvMass_ks_2_underlying[10];
+  TH1D* InvMass_la_2_underlying[10];
+  
+  TH1D* InvMass_ks_3_underlying[10];
+  TH1D* InvMass_la_3_underlying[10];
 
 };
 
@@ -213,7 +220,6 @@ V0AnalyzerHisto::~V0AnalyzerHisto()
   // (e.g. close files, deallocate resources etc.)
 
 }
-
 
 //==================
 // member functions
@@ -322,679 +328,1517 @@ V0AnalyzerHisto::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
     if(bestvz < -15.0 || bestvz>15.0) return;
 
 //multiplicity bins:
-    //if (nTracks < 220 || nTracks > 260) return;
-
-
-  for(unsigned it=0; it<v0candidates_ks->size(); ++it){     
-  
-          const reco::VertexCompositeCandidate & trk = (*v0candidates_ks)[it];
-          const reco:: Candidate * d1 = trk.daughter(0);
-          const reco:: Candidate * d2 = trk.daughter(1); 
-
-          auto dau1 = d1->get<reco::TrackRef>();
-          auto dau2 = d2->get<reco::TrackRef>();
-   
-          double eta_dau1 = dau1->eta();
-          double phi_dau1 = dau1->phi();
-          double pt_dau1 = dau1->pt();
-          double px_dau1 = dau1->px();
-          double py_dau1 = dau1->py();
-          double pz_dau1 = dau1->pz();
-          double charge_dau1 = dau1->charge();  
-          double p_dau1 = dau1->p();        
-
-          double eta_dau2 = dau2->eta();
-          double phi_dau2 = dau2->phi();
-          double pt_dau2 = dau2->pt();
-          double px_dau2 = dau2->px();
-          double py_dau2 = dau2->py();
-          double pz_dau2 = dau2->pz();    
-          double charge_dau2 = dau2->charge();
-          double p_dau2 = dau2->p();
-
-          double ks_mass = trk.mass();
-          double ks_pt = trk.pt();
-          double ks_px = trk.px();
-          double ks_py = trk.py();
-          double ks_pz = trk.pz();
-          double ks_eta = trk.eta();
-          double ks_phi = trk.phi();
-
-          //PAngle
-          double secvz = trk.vz();
-          double secvx = trk.vx();
-          double secvy = trk.vy();
-          TVector3 ptosvec(secvx-bestvx,secvy-bestvy,secvz-bestvz);
-          TVector3 secvec(ks_px,ks_py,ks_pz);
-
-          double agl = cos(secvec.Angle(ptosvec));
-
-         //Decay length
-          typedef ROOT::Math::SMatrix<double, 3, 3, ROOT::Math::MatRepSym<double, 3> > SMatrixSym3D;
-          typedef ROOT::Math::SVector<double, 3> SVector3;
-
-          SMatrixSym3D totalCov = vtx.covariance() + trk.vertexCovariance();
-          SVector3 distanceVector(secvx-bestvx,secvy-bestvy,secvz-bestvz);
-
-          double dl = ROOT::Math::Mag(distanceVector);
-          double dlerror = sqrt(ROOT::Math::Similarity(totalCov, distanceVector))/dl;
-          double dlos = dl/dlerror;
-          
-          //NumberofValidHits for two daughters"
-          double dau1_Nhits = dau1->numberOfValidHits();
-          double dau2_Nhits = dau2->numberOfValidHits();
-
-          //DCA
-          math::XYZPoint bestvtx(bestvx,bestvy,bestvz);
-          
-          double dzbest1 = dau1->dz(bestvtx);
-          double dxybest1 = dau1->dxy(bestvtx);
-          double dzerror1 = sqrt(dau1->dzError()*dau1->dzError()+bestvzError*bestvzError);
-          double dxyerror1 = sqrt(dau1->d0Error()*dau1->d0Error()+bestvxError*bestvyError);
-
-          double dzos1 = dzbest1/dzerror1;
-          double dxyos1 = dxybest1/dxyerror1;
-          
-          double dzbest2 = dau2->dz(bestvtx);
-          double dxybest2 = dau2->dxy(bestvtx);
-          double dzerror2 = sqrt(dau2->dzError()*dau2->dzError()+bestvzError*bestvzError);
-          double dxyerror2 = sqrt(dau2->d0Error()*dau2->d0Error()+bestvxError*bestvyError);
-          
-          double dzos2 = dzbest2/dzerror2;
-          double dxyos2 = dxybest2/dxyerror2;
-
-//underlying K0s:
-
-          if ( dau1_Nhits > 3 && dau2_Nhits > 3 && dlos > 5 && agl > 0.999 && TMath::Abs(dzos1) > 1 && TMath::Abs(dzos2) > 1 && TMath::Abs(dxyos1) > 1 && TMath::Abs(dxyos2) > 1)
-          {
-
-              if (ks_pt > 0.7 && ks_pt < 1.0)
-                { 
-                    double temp = Mass_ks(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
-                    double temp_e = Mass_e(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
-                      if ( temp < 1.13568 && temp > 1.09568 ) continue;
-                        if ( temp_e < 0.015511) continue;
-
-                          InvMass_ks_underlying[0]->Fill(ks_mass);
-                }
-
-              if (ks_pt > 1.0 && ks_pt < 1.4)
-                {
-                    double temp = Mass_ks(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
-                    double temp_e = Mass_e(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
-                      if ( temp < 1.13568 && temp > 1.09568 ) continue;
-                        if ( temp_e < 0.015511) continue;
-
-                          InvMass_ks_underlying[1]->Fill(ks_mass);
-                }
-
-              if (ks_pt > 1.4 && ks_pt < 1.8)
-                {
-                    double temp = Mass_ks(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
-                    double temp_e = Mass_e(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
-                      if ( temp < 1.13568 && temp > 1.09568 ) continue;
-                        if ( temp_e < 0.015511) continue;
+//multiplicity bins:
+//multiplicity bins:
+if (nTracks > 120 && nTracks < 150){
+
+    for(unsigned it=0; it<v0candidates_ks->size(); ++it){     
+    
+            const reco::VertexCompositeCandidate & trk = (*v0candidates_ks)[it];
+            const reco:: Candidate * d1 = trk.daughter(0);
+            const reco:: Candidate * d2 = trk.daughter(1); 
+
+            auto dau1 = d1->get<reco::TrackRef>();
+            auto dau2 = d2->get<reco::TrackRef>();
+     
+            double eta_dau1 = dau1->eta();
+            double phi_dau1 = dau1->phi();
+            double pt_dau1 = dau1->pt();
+            double px_dau1 = dau1->px();
+            double py_dau1 = dau1->py();
+            double pz_dau1 = dau1->pz();
+            double charge_dau1 = dau1->charge();  
+            double p_dau1 = dau1->p();        
+
+            double eta_dau2 = dau2->eta();
+            double phi_dau2 = dau2->phi();
+            double pt_dau2 = dau2->pt();
+            double px_dau2 = dau2->px();
+            double py_dau2 = dau2->py();
+            double pz_dau2 = dau2->pz();    
+            double charge_dau2 = dau2->charge();
+            double p_dau2 = dau2->p();
+
+            double ks_mass = trk.mass();
+            double ks_pt = trk.pt();
+            double ks_px = trk.px();
+            double ks_py = trk.py();
+            double ks_pz = trk.pz();
+            double ks_eta = trk.eta();
+            double ks_phi = trk.phi();
+
+            //PAngle
+            double secvz = trk.vz();
+            double secvx = trk.vx();
+            double secvy = trk.vy();
+            TVector3 ptosvec(secvx-bestvx,secvy-bestvy,secvz-bestvz);
+            TVector3 secvec(ks_px,ks_py,ks_pz);
+
+            double agl = cos(secvec.Angle(ptosvec));
+
+           //Decay length
+            typedef ROOT::Math::SMatrix<double, 3, 3, ROOT::Math::MatRepSym<double, 3> > SMatrixSym3D;
+            typedef ROOT::Math::SVector<double, 3> SVector3;
+
+            SMatrixSym3D totalCov = vtx.covariance() + trk.vertexCovariance();
+            SVector3 distanceVector(secvx-bestvx,secvy-bestvy,secvz-bestvz);
+
+            double dl = ROOT::Math::Mag(distanceVector);
+            double dlerror = sqrt(ROOT::Math::Similarity(totalCov, distanceVector))/dl;
+            double dlos = dl/dlerror;
+            
+            //NumberofValidHits for two daughters"
+            double dau1_Nhits = dau1->numberOfValidHits();
+            double dau2_Nhits = dau2->numberOfValidHits();
+
+            //DCA
+            math::XYZPoint bestvtx(bestvx,bestvy,bestvz);
+            
+            double dzbest1 = dau1->dz(bestvtx);
+            double dxybest1 = dau1->dxy(bestvtx);
+            double dzerror1 = sqrt(dau1->dzError()*dau1->dzError()+bestvzError*bestvzError);
+            double dxyerror1 = sqrt(dau1->d0Error()*dau1->d0Error()+bestvxError*bestvyError);
+
+            double dzos1 = dzbest1/dzerror1;
+            double dxyos1 = dxybest1/dxyerror1;
+            
+            double dzbest2 = dau2->dz(bestvtx);
+            double dxybest2 = dau2->dxy(bestvtx);
+            double dzerror2 = sqrt(dau2->dzError()*dau2->dzError()+bestvzError*bestvzError);
+            double dxyerror2 = sqrt(dau2->d0Error()*dau2->d0Error()+bestvxError*bestvyError);
+            
+            double dzos2 = dzbest2/dzerror2;
+            double dxyos2 = dxybest2/dxyerror2;
+
+    //3_underlying K0s:
+
+            if (dau1_Nhits > 3 && dau2_Nhits > 3 && dlos > 5 && agl > 0.999 && TMath::Abs(dzos1) > 1 && 
+              TMath::Abs(dzos2) > 1 && TMath::Abs(dxyos1) > 1 && TMath::Abs(dxyos2) > 1)
+            {
+
+                if (ks_pt > 0.7 && ks_pt < 1.0)
+                  { 
+                      double temp = Mass_ks(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                      double temp_e = Mass_e(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                        if ( temp < 1.13568 && temp > 1.09568 ) continue;
+                          if ( temp_e < 0.015511) continue;
+
+                            InvMass_ks_0_underlying[0]->Fill(ks_mass);
+                  }
+
+                if (ks_pt > 1.0 && ks_pt < 1.4)
+                  {
+                      double temp = Mass_ks(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                      double temp_e = Mass_e(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                        if ( temp < 1.13568 && temp > 1.09568 ) continue;
+                          if ( temp_e < 0.015511) continue;
+
+                            InvMass_ks_0_underlying[1]->Fill(ks_mass);
+                  }
+
+                if (ks_pt > 1.4 && ks_pt < 1.8)
+                  {
+                      double temp = Mass_ks(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                      double temp_e = Mass_e(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                        if ( temp < 1.13568 && temp > 1.09568 ) continue;
+                          if ( temp_e < 0.015511) continue;
+
+                            InvMass_ks_0_underlying[2]->Fill(ks_mass);
+                  }
+
+                if (ks_pt > 1.8 && ks_pt < 2.2)
+                  {
+                      double temp = Mass_ks(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                      double temp_e = Mass_e(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                       if ( temp < 1.13568 && temp > 1.09568 ) continue;
+                          if ( temp_e < 0.015511) continue;
+
+                            InvMass_ks_0_underlying[3]->Fill(ks_mass);
+                  }
+
+                if (ks_pt > 2.2 && ks_pt < 2.8)
+                  {
+                      double temp = Mass_ks(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                      double temp_e = Mass_e(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                        if ( temp < 1.13568 && temp > 1.09568 ) continue;
+                          if ( temp_e < 0.015511) continue;
+
+                            InvMass_ks_0_underlying[4]->Fill(ks_mass);
+                  }
+
+
+                if (ks_pt > 2.8 && ks_pt < 3.6)
+                  {
+                      double temp = Mass_ks(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                      double temp_e = Mass_e(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                        if ( temp < 1.13568 && temp > 1.09568 ) continue;
+                          if ( temp_e < 0.015511) continue;
+
+                            InvMass_ks_0_underlying[5]->Fill(ks_mass);
+                  }
+
+                if (ks_pt > 3.6 && ks_pt < 4.6)
+                  {
+                      double temp = Mass_ks(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                      double temp_e = Mass_e(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                        if ( temp < 1.13568 && temp > 1.09568 ) continue;
+                          if ( temp_e < 0.015511) continue;
+
+                            InvMass_ks_0_underlying[6]->Fill(ks_mass);
+                  }
+
+                if (ks_pt > 4.6 && ks_pt < 6.0)
+                  {
+                      double temp = Mass_ks(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                      double temp_e = Mass_e(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                        if ( temp < 1.13568 && temp > 1.09568 ) continue;
+                          if ( temp_e < 0.015511) continue;
+
+                            InvMass_ks_0_underlying[7]->Fill(ks_mass);
+                  }
+
+                if (ks_pt > 6.0 && ks_pt < 9.0)
+                  {
+                      double temp = Mass_ks(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                      double temp_e = Mass_e(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                        if ( temp < 1.13568 && temp > 1.09568 ) continue;
+                          if ( temp_e < 0.015511) continue;
+
+                            InvMass_ks_0_underlying[8]->Fill(ks_mass);
+                  }
+
+                if (ks_pt > 9.0 && ks_pt < 12.0)
+                  {
+                      double temp = Mass_ks(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                      double temp_e = Mass_e(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                        if ( temp < 1.13568 && temp > 1.09568 ) continue;
+                          if ( temp_e < 0.015511) continue;
+
+                            InvMass_ks_0_underlying[9]->Fill(ks_mass);
+                  }
+
+            }
+             
+      }
+
+        for(unsigned it=0; it<v0candidates_la->size(); ++it){
+
+            const reco::VertexCompositeCandidate & trk = (*v0candidates_la)[it];
+            const reco:: Candidate * d1 = trk.daughter(0);
+            const reco:: Candidate * d2 = trk.daughter(1);
+
+            auto dau1 = d1->get<reco::TrackRef>();
+            auto dau2 = d2->get<reco::TrackRef>();
+
+            double eta_dau1 = dau1->eta();
+            double phi_dau1 = dau1->phi();
+            double pt_dau1 = dau1->pt();
+            double px_dau1 = dau1->px();
+            double py_dau1 = dau1->py();
+            double pz_dau1 = dau1->pz();
+            double charge_dau1 = dau1->charge();
+            double p_dau1 = dau1->p();
+
+            double eta_dau2 = dau2->eta();
+            double phi_dau2 = dau2->phi();
+            double pt_dau2 = dau2->pt();
+            double px_dau2 = dau2->px();
+            double py_dau2 = dau2->py();
+            double pz_dau2 = dau2->pz();     
+            double charge_dau2 = dau2->charge();
+            double p_dau2 = dau2->p();  
+    
+            double la_mass = trk.mass();
+            double la_pt = trk.pt();
+            double la_px = trk.px();
+            double la_py = trk.py();
+            double la_pz = trk.pz();
+            double la_eta = trk.eta();
+            double la_phi = trk.phi();
+
+            //PAngle
+            double secvz = trk.vz();
+            double secvx = trk.vx();
+            double secvy = trk.vy();
+            TVector3 ptosvec(secvx-bestvx,secvy-bestvy,secvz-bestvz);
+            TVector3 secvec(la_px,la_py,la_pz);
+
+            double agl = cos(secvec.Angle(ptosvec));
+
+           //Decay length
+            typedef ROOT::Math::SMatrix<double, 3, 3, ROOT::Math::MatRepSym<double, 3> > SMatrixSym3D;
+            typedef ROOT::Math::SVector<double, 3> SVector3;
+
+            SMatrixSym3D totalCov = vtx.covariance() + trk.vertexCovariance();
+            SVector3 distanceVector(secvx-bestvx,secvy-bestvy,secvz-bestvz);
+
+            double dl = ROOT::Math::Mag(distanceVector);
+            double dlerror = sqrt(ROOT::Math::Similarity(totalCov, distanceVector))/dl;
+            double dlos = dl/dlerror;
+            
+            //NumberofValidHits for two daughters"
+            double dau1_Nhits = dau1->numberOfValidHits();
+            double dau2_Nhits = dau2->numberOfValidHits();
+
+            //DCA
+            math::XYZPoint bestvtx(bestvx,bestvy,bestvz);
+            
+            double dzbest1 = dau1->dz(bestvtx);
+            double dxybest1 = dau1->dxy(bestvtx);
+            double dzerror1 = sqrt(dau1->dzError()*dau1->dzError()+bestvzError*bestvzError);
+            double dxyerror1 = sqrt(dau1->d0Error()*dau1->d0Error()+bestvxError*bestvyError);
+
+            double dzos1 = dzbest1/dzerror1;
+            double dxyos1 = dxybest1/dxyerror1;
+            
+            double dzbest2 = dau2->dz(bestvtx);
+            double dxybest2 = dau2->dxy(bestvtx);
+            double dzerror2 = sqrt(dau2->dzError()*dau2->dzError()+bestvzError*bestvzError);
+            double dxyerror2 = sqrt(dau2->d0Error()*dau2->d0Error()+bestvxError*bestvyError);
+            
+            double dzos2 = dzbest2/dzerror2;
+            double dxyos2 = dxybest2/dxyerror2;
+
+            if ( dau1_Nhits > 3 && dau2_Nhits > 3 && dlos > 5 && agl > 0.999 && TMath::Abs(dzos1) > 1 && TMath::Abs(dzos2) > 1 && TMath::Abs(dxyos1) > 1 && TMath::Abs(dxyos2) > 1)
+            {
+
+                if (la_pt > 0.7 && la_pt < 1.0)
+                  { 
+                      double temp = Mass_la(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                      double temp_e = Mass_e(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                        if ( temp < 0.5076 && temp > 0.4876 ) continue;
+                          if ( temp_e < 0.015511) continue;
+
+                            InvMass_la_0_underlying[0]->Fill(la_mass);
+                  }
+
+                if (la_pt > 1.0 && la_pt < 1.4)
+                  {
+                      double temp = Mass_la(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                      double temp_e = Mass_e(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                        if ( temp < 0.5076 && temp > 0.4876 ) continue;
+                          if ( temp_e < 0.015511) continue;
+
+                            InvMass_la_0_underlying[1]->Fill(la_mass);
+                  }
+
+                if (la_pt > 1.4 && la_pt < 1.8)
+                  {
+                      double temp = Mass_la(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                      double temp_e = Mass_e(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                        if ( temp < 0.5076 && temp > 0.4876 ) continue;
+                          if ( temp_e < 0.015511) continue;
+
+                            InvMass_la_0_underlying[2]->Fill(la_mass);
+                  }
+
+                if (la_pt > 1.8 && la_pt < 2.2)
+                  {
+                      double temp = Mass_la(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                      double temp_e = Mass_e(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                       if ( temp < 0.5076 && temp > 0.4876 ) continue;
+                          if ( temp_e < 0.015511) continue;
+
+                            InvMass_la_0_underlying[3]->Fill(la_mass);
+                  }
+
+                if (la_pt > 2.2 && la_pt < 2.8)
+                  {
+                      double temp = Mass_la(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                      double temp_e = Mass_e(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                        if ( temp < 0.5076 && temp > 0.4876 ) continue;
+                          if ( temp_e < 0.015511) continue;
+
+                            InvMass_la_0_underlying[4]->Fill(la_mass);
+                  }
+
+
+                if (la_pt > 2.8 && la_pt < 3.6)
+                  {
+                      double temp = Mass_la(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                      double temp_e = Mass_e(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                        if ( temp < 0.5076 && temp > 0.4876 ) continue;
+                          if ( temp_e < 0.015511) continue;
+
+                            InvMass_la_0_underlying[5]->Fill(la_mass);
+                  }
+
+                if (la_pt > 3.6 && la_pt < 4.6)
+                  {
+                      double temp = Mass_la(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                      double temp_e = Mass_e(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                        if ( temp < 0.5076 && temp > 0.4876 ) continue;
+                          if ( temp_e < 0.015511) continue;
+
+                            InvMass_la_0_underlying[6]->Fill(la_mass);
+                  }
+
+                if (la_pt > 4.6 && la_pt < 6.0)
+                  {
+                      double temp = Mass_la(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                      double temp_e = Mass_e(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                        if ( temp < 0.5076 && temp > 0.4876 ) continue;
+                          if ( temp_e < 0.015511) continue;
+
+                            InvMass_la_0_underlying[7]->Fill(la_mass);
+                  }
+
+                if (la_pt > 6.0 && la_pt < 9.0)
+                  {
+                      double temp = Mass_la(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                      double temp_e = Mass_e(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                        if ( temp < 0.5076 && temp > 0.4876 ) continue;
+                          if ( temp_e < 0.015511) continue;
+
+                            InvMass_la_0_underlying[8]->Fill(la_mass);
+                  }
+
+                if (la_pt > 9.0 && la_pt < 12.0)
+                  {
+                      double temp = Mass_la(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                      double temp_e = Mass_e(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                        if ( temp < 0.5076 && temp > 0.4876 ) continue;
+                          if ( temp_e < 0.015511) continue;
+
+                            InvMass_la_0_underlying[9]->Fill(la_mass);
+                  }
+            }
+      }
+
+  }
+
+if (nTracks > 150 && nTracks < 185){
+
+    for(unsigned it=0; it<v0candidates_ks->size(); ++it){     
+    
+            const reco::VertexCompositeCandidate & trk = (*v0candidates_ks)[it];
+            const reco:: Candidate * d1 = trk.daughter(0);
+            const reco:: Candidate * d2 = trk.daughter(1); 
+
+            auto dau1 = d1->get<reco::TrackRef>();
+            auto dau2 = d2->get<reco::TrackRef>();
+     
+            double eta_dau1 = dau1->eta();
+            double phi_dau1 = dau1->phi();
+            double pt_dau1 = dau1->pt();
+            double px_dau1 = dau1->px();
+            double py_dau1 = dau1->py();
+            double pz_dau1 = dau1->pz();
+            double charge_dau1 = dau1->charge();  
+            double p_dau1 = dau1->p();        
+
+            double eta_dau2 = dau2->eta();
+            double phi_dau2 = dau2->phi();
+            double pt_dau2 = dau2->pt();
+            double px_dau2 = dau2->px();
+            double py_dau2 = dau2->py();
+            double pz_dau2 = dau2->pz();    
+            double charge_dau2 = dau2->charge();
+            double p_dau2 = dau2->p();
+
+            double ks_mass = trk.mass();
+            double ks_pt = trk.pt();
+            double ks_px = trk.px();
+            double ks_py = trk.py();
+            double ks_pz = trk.pz();
+            double ks_eta = trk.eta();
+            double ks_phi = trk.phi();
+
+            //PAngle
+            double secvz = trk.vz();
+            double secvx = trk.vx();
+            double secvy = trk.vy();
+            TVector3 ptosvec(secvx-bestvx,secvy-bestvy,secvz-bestvz);
+            TVector3 secvec(ks_px,ks_py,ks_pz);
+
+            double agl = cos(secvec.Angle(ptosvec));
+
+           //Decay length
+            typedef ROOT::Math::SMatrix<double, 3, 3, ROOT::Math::MatRepSym<double, 3> > SMatrixSym3D;
+            typedef ROOT::Math::SVector<double, 3> SVector3;
+
+            SMatrixSym3D totalCov = vtx.covariance() + trk.vertexCovariance();
+            SVector3 distanceVector(secvx-bestvx,secvy-bestvy,secvz-bestvz);
+
+            double dl = ROOT::Math::Mag(distanceVector);
+            double dlerror = sqrt(ROOT::Math::Similarity(totalCov, distanceVector))/dl;
+            double dlos = dl/dlerror;
+            
+            //NumberofValidHits for two daughters"
+            double dau1_Nhits = dau1->numberOfValidHits();
+            double dau2_Nhits = dau2->numberOfValidHits();
+
+            //DCA
+            math::XYZPoint bestvtx(bestvx,bestvy,bestvz);
+            
+            double dzbest1 = dau1->dz(bestvtx);
+            double dxybest1 = dau1->dxy(bestvtx);
+            double dzerror1 = sqrt(dau1->dzError()*dau1->dzError()+bestvzError*bestvzError);
+            double dxyerror1 = sqrt(dau1->d0Error()*dau1->d0Error()+bestvxError*bestvyError);
+
+            double dzos1 = dzbest1/dzerror1;
+            double dxyos1 = dxybest1/dxyerror1;
+            
+            double dzbest2 = dau2->dz(bestvtx);
+            double dxybest2 = dau2->dxy(bestvtx);
+            double dzerror2 = sqrt(dau2->dzError()*dau2->dzError()+bestvzError*bestvzError);
+            double dxyerror2 = sqrt(dau2->d0Error()*dau2->d0Error()+bestvxError*bestvyError);
+            
+            double dzos2 = dzbest2/dzerror2;
+            double dxyos2 = dxybest2/dxyerror2;
+
+    //3_underlying K0s:
+
+            if (dau1_Nhits > 3 && dau2_Nhits > 3 && dlos > 5 && agl > 0.999 && TMath::Abs(dzos1) > 1 && 
+              TMath::Abs(dzos2) > 1 && TMath::Abs(dxyos1) > 1 && TMath::Abs(dxyos2) > 1)
+            {
+
+                if (ks_pt > 0.7 && ks_pt < 1.0)
+                  { 
+                      double temp = Mass_ks(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                      double temp_e = Mass_e(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                        if ( temp < 1.13568 && temp > 1.09568 ) continue;
+                          if ( temp_e < 0.015511) continue;
+
+                            InvMass_ks_1_underlying[0]->Fill(ks_mass);
+                  }
+
+                if (ks_pt > 1.0 && ks_pt < 1.4)
+                  {
+                      double temp = Mass_ks(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                      double temp_e = Mass_e(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                        if ( temp < 1.13568 && temp > 1.09568 ) continue;
+                          if ( temp_e < 0.015511) continue;
+
+                            InvMass_ks_1_underlying[1]->Fill(ks_mass);
+                  }
+
+                if (ks_pt > 1.4 && ks_pt < 1.8)
+                  {
+                      double temp = Mass_ks(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                      double temp_e = Mass_e(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                        if ( temp < 1.13568 && temp > 1.09568 ) continue;
+                          if ( temp_e < 0.015511) continue;
+
+                            InvMass_ks_1_underlying[2]->Fill(ks_mass);
+                  }
+
+                if (ks_pt > 1.8 && ks_pt < 2.2)
+                  {
+                      double temp = Mass_ks(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                      double temp_e = Mass_e(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                       if ( temp < 1.13568 && temp > 1.09568 ) continue;
+                          if ( temp_e < 0.015511) continue;
+
+                            InvMass_ks_1_underlying[3]->Fill(ks_mass);
+                  }
+
+                if (ks_pt > 2.2 && ks_pt < 2.8)
+                  {
+                      double temp = Mass_ks(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                      double temp_e = Mass_e(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                        if ( temp < 1.13568 && temp > 1.09568 ) continue;
+                          if ( temp_e < 0.015511) continue;
+
+                            InvMass_ks_1_underlying[4]->Fill(ks_mass);
+                  }
+
+
+                if (ks_pt > 2.8 && ks_pt < 3.6)
+                  {
+                      double temp = Mass_ks(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                      double temp_e = Mass_e(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                        if ( temp < 1.13568 && temp > 1.09568 ) continue;
+                          if ( temp_e < 0.015511) continue;
+
+                            InvMass_ks_1_underlying[5]->Fill(ks_mass);
+                  }
+
+                if (ks_pt > 3.6 && ks_pt < 4.6)
+                  {
+                      double temp = Mass_ks(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                      double temp_e = Mass_e(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                        if ( temp < 1.13568 && temp > 1.09568 ) continue;
+                          if ( temp_e < 0.015511) continue;
+
+                            InvMass_ks_1_underlying[6]->Fill(ks_mass);
+                  }
+
+                if (ks_pt > 4.6 && ks_pt < 6.0)
+                  {
+                      double temp = Mass_ks(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                      double temp_e = Mass_e(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                        if ( temp < 1.13568 && temp > 1.09568 ) continue;
+                          if ( temp_e < 0.015511) continue;
+
+                            InvMass_ks_1_underlying[7]->Fill(ks_mass);
+                  }
+
+                if (ks_pt > 6.0 && ks_pt < 9.0)
+                  {
+                      double temp = Mass_ks(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                      double temp_e = Mass_e(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                        if ( temp < 1.13568 && temp > 1.09568 ) continue;
+                          if ( temp_e < 0.015511) continue;
+
+                            InvMass_ks_1_underlying[8]->Fill(ks_mass);
+                  }
+
+                if (ks_pt > 9.0 && ks_pt < 12.0)
+                  {
+                      double temp = Mass_ks(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                      double temp_e = Mass_e(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                        if ( temp < 1.13568 && temp > 1.09568 ) continue;
+                          if ( temp_e < 0.015511) continue;
+
+                            InvMass_ks_1_underlying[9]->Fill(ks_mass);
+                  }
+
+            }
+             
+      }
+
+        for(unsigned it=0; it<v0candidates_la->size(); ++it){
+
+            const reco::VertexCompositeCandidate & trk = (*v0candidates_la)[it];
+            const reco:: Candidate * d1 = trk.daughter(0);
+            const reco:: Candidate * d2 = trk.daughter(1);
+
+            auto dau1 = d1->get<reco::TrackRef>();
+            auto dau2 = d2->get<reco::TrackRef>();
+
+            double eta_dau1 = dau1->eta();
+            double phi_dau1 = dau1->phi();
+            double pt_dau1 = dau1->pt();
+            double px_dau1 = dau1->px();
+            double py_dau1 = dau1->py();
+            double pz_dau1 = dau1->pz();
+            double charge_dau1 = dau1->charge();
+            double p_dau1 = dau1->p();
+
+            double eta_dau2 = dau2->eta();
+            double phi_dau2 = dau2->phi();
+            double pt_dau2 = dau2->pt();
+            double px_dau2 = dau2->px();
+            double py_dau2 = dau2->py();
+            double pz_dau2 = dau2->pz();     
+            double charge_dau2 = dau2->charge();
+            double p_dau2 = dau2->p();  
+    
+            double la_mass = trk.mass();
+            double la_pt = trk.pt();
+            double la_px = trk.px();
+            double la_py = trk.py();
+            double la_pz = trk.pz();
+            double la_eta = trk.eta();
+            double la_phi = trk.phi();
+
+            //PAngle
+            double secvz = trk.vz();
+            double secvx = trk.vx();
+            double secvy = trk.vy();
+            TVector3 ptosvec(secvx-bestvx,secvy-bestvy,secvz-bestvz);
+            TVector3 secvec(la_px,la_py,la_pz);
+
+            double agl = cos(secvec.Angle(ptosvec));
+
+           //Decay length
+            typedef ROOT::Math::SMatrix<double, 3, 3, ROOT::Math::MatRepSym<double, 3> > SMatrixSym3D;
+            typedef ROOT::Math::SVector<double, 3> SVector3;
+
+            SMatrixSym3D totalCov = vtx.covariance() + trk.vertexCovariance();
+            SVector3 distanceVector(secvx-bestvx,secvy-bestvy,secvz-bestvz);
+
+            double dl = ROOT::Math::Mag(distanceVector);
+            double dlerror = sqrt(ROOT::Math::Similarity(totalCov, distanceVector))/dl;
+            double dlos = dl/dlerror;
+            
+            //NumberofValidHits for two daughters"
+            double dau1_Nhits = dau1->numberOfValidHits();
+            double dau2_Nhits = dau2->numberOfValidHits();
+
+            //DCA
+            math::XYZPoint bestvtx(bestvx,bestvy,bestvz);
+            
+            double dzbest1 = dau1->dz(bestvtx);
+            double dxybest1 = dau1->dxy(bestvtx);
+            double dzerror1 = sqrt(dau1->dzError()*dau1->dzError()+bestvzError*bestvzError);
+            double dxyerror1 = sqrt(dau1->d0Error()*dau1->d0Error()+bestvxError*bestvyError);
+
+            double dzos1 = dzbest1/dzerror1;
+            double dxyos1 = dxybest1/dxyerror1;
+            
+            double dzbest2 = dau2->dz(bestvtx);
+            double dxybest2 = dau2->dxy(bestvtx);
+            double dzerror2 = sqrt(dau2->dzError()*dau2->dzError()+bestvzError*bestvzError);
+            double dxyerror2 = sqrt(dau2->d0Error()*dau2->d0Error()+bestvxError*bestvyError);
+            
+            double dzos2 = dzbest2/dzerror2;
+            double dxyos2 = dxybest2/dxyerror2;
+
+            if ( dau1_Nhits > 3 && dau2_Nhits > 3 && dlos > 5 && agl > 0.999 && TMath::Abs(dzos1) > 1 && TMath::Abs(dzos2) > 1 && TMath::Abs(dxyos1) > 1 && TMath::Abs(dxyos2) > 1)
+            {
+
+                if (la_pt > 0.7 && la_pt < 1.0)
+                  { 
+                      double temp = Mass_la(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                      double temp_e = Mass_e(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                        if ( temp < 0.5076 && temp > 0.4876 ) continue;
+                          if ( temp_e < 0.015511) continue;
+
+                            InvMass_la_1_underlying[0]->Fill(la_mass);
+                  }
+
+                if (la_pt > 1.0 && la_pt < 1.4)
+                  {
+                      double temp = Mass_la(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                      double temp_e = Mass_e(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                        if ( temp < 0.5076 && temp > 0.4876 ) continue;
+                          if ( temp_e < 0.015511) continue;
+
+                            InvMass_la_1_underlying[1]->Fill(la_mass);
+                  }
+
+                if (la_pt > 1.4 && la_pt < 1.8)
+                  {
+                      double temp = Mass_la(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                      double temp_e = Mass_e(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                        if ( temp < 0.5076 && temp > 0.4876 ) continue;
+                          if ( temp_e < 0.015511) continue;
+
+                            InvMass_la_1_underlying[2]->Fill(la_mass);
+                  }
+
+                if (la_pt > 1.8 && la_pt < 2.2)
+                  {
+                      double temp = Mass_la(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                      double temp_e = Mass_e(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                       if ( temp < 0.5076 && temp > 0.4876 ) continue;
+                          if ( temp_e < 0.015511) continue;
+
+                            InvMass_la_1_underlying[3]->Fill(la_mass);
+                  }
+
+                if (la_pt > 2.2 && la_pt < 2.8)
+                  {
+                      double temp = Mass_la(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                      double temp_e = Mass_e(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                        if ( temp < 0.5076 && temp > 0.4876 ) continue;
+                          if ( temp_e < 0.015511) continue;
+
+                            InvMass_la_1_underlying[4]->Fill(la_mass);
+                  }
+
+
+                if (la_pt > 2.8 && la_pt < 3.6)
+                  {
+                      double temp = Mass_la(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                      double temp_e = Mass_e(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                        if ( temp < 0.5076 && temp > 0.4876 ) continue;
+                          if ( temp_e < 0.015511) continue;
+
+                            InvMass_la_1_underlying[5]->Fill(la_mass);
+                  }
+
+                if (la_pt > 3.6 && la_pt < 4.6)
+                  {
+                      double temp = Mass_la(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                      double temp_e = Mass_e(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                        if ( temp < 0.5076 && temp > 0.4876 ) continue;
+                          if ( temp_e < 0.015511) continue;
+
+                            InvMass_la_1_underlying[6]->Fill(la_mass);
+                  }
+
+                if (la_pt > 4.6 && la_pt < 6.0)
+                  {
+                      double temp = Mass_la(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                      double temp_e = Mass_e(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                        if ( temp < 0.5076 && temp > 0.4876 ) continue;
+                          if ( temp_e < 0.015511) continue;
+
+                            InvMass_la_1_underlying[7]->Fill(la_mass);
+                  }
+
+                if (la_pt > 6.0 && la_pt < 9.0)
+                  {
+                      double temp = Mass_la(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                      double temp_e = Mass_e(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                        if ( temp < 0.5076 && temp > 0.4876 ) continue;
+                          if ( temp_e < 0.015511) continue;
+
+                            InvMass_la_1_underlying[8]->Fill(la_mass);
+                  }
+
+                if (la_pt > 9.0 && la_pt < 12.0)
+                  {
+                      double temp = Mass_la(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                      double temp_e = Mass_e(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                        if ( temp < 0.5076 && temp > 0.4876 ) continue;
+                          if ( temp_e < 0.015511) continue;
+
+                            InvMass_la_1_underlying[9]->Fill(la_mass);
+                  }
+            }
+      }
+
+  }
+
+if (nTracks > 185 && nTracks < 220){
+
+    for(unsigned it=0; it<v0candidates_ks->size(); ++it){     
+    
+            const reco::VertexCompositeCandidate & trk = (*v0candidates_ks)[it];
+            const reco:: Candidate * d1 = trk.daughter(0);
+            const reco:: Candidate * d2 = trk.daughter(1); 
+
+            auto dau1 = d1->get<reco::TrackRef>();
+            auto dau2 = d2->get<reco::TrackRef>();
+     
+            double eta_dau1 = dau1->eta();
+            double phi_dau1 = dau1->phi();
+            double pt_dau1 = dau1->pt();
+            double px_dau1 = dau1->px();
+            double py_dau1 = dau1->py();
+            double pz_dau1 = dau1->pz();
+            double charge_dau1 = dau1->charge();  
+            double p_dau1 = dau1->p();        
+
+            double eta_dau2 = dau2->eta();
+            double phi_dau2 = dau2->phi();
+            double pt_dau2 = dau2->pt();
+            double px_dau2 = dau2->px();
+            double py_dau2 = dau2->py();
+            double pz_dau2 = dau2->pz();    
+            double charge_dau2 = dau2->charge();
+            double p_dau2 = dau2->p();
+
+            double ks_mass = trk.mass();
+            double ks_pt = trk.pt();
+            double ks_px = trk.px();
+            double ks_py = trk.py();
+            double ks_pz = trk.pz();
+            double ks_eta = trk.eta();
+            double ks_phi = trk.phi();
+
+            //PAngle
+            double secvz = trk.vz();
+            double secvx = trk.vx();
+            double secvy = trk.vy();
+            TVector3 ptosvec(secvx-bestvx,secvy-bestvy,secvz-bestvz);
+            TVector3 secvec(ks_px,ks_py,ks_pz);
+
+            double agl = cos(secvec.Angle(ptosvec));
+
+           //Decay length
+            typedef ROOT::Math::SMatrix<double, 3, 3, ROOT::Math::MatRepSym<double, 3> > SMatrixSym3D;
+            typedef ROOT::Math::SVector<double, 3> SVector3;
+
+            SMatrixSym3D totalCov = vtx.covariance() + trk.vertexCovariance();
+            SVector3 distanceVector(secvx-bestvx,secvy-bestvy,secvz-bestvz);
+
+            double dl = ROOT::Math::Mag(distanceVector);
+            double dlerror = sqrt(ROOT::Math::Similarity(totalCov, distanceVector))/dl;
+            double dlos = dl/dlerror;
+            
+            //NumberofValidHits for two daughters"
+            double dau1_Nhits = dau1->numberOfValidHits();
+            double dau2_Nhits = dau2->numberOfValidHits();
+
+            //DCA
+            math::XYZPoint bestvtx(bestvx,bestvy,bestvz);
+            
+            double dzbest1 = dau1->dz(bestvtx);
+            double dxybest1 = dau1->dxy(bestvtx);
+            double dzerror1 = sqrt(dau1->dzError()*dau1->dzError()+bestvzError*bestvzError);
+            double dxyerror1 = sqrt(dau1->d0Error()*dau1->d0Error()+bestvxError*bestvyError);
+
+            double dzos1 = dzbest1/dzerror1;
+            double dxyos1 = dxybest1/dxyerror1;
+            
+            double dzbest2 = dau2->dz(bestvtx);
+            double dxybest2 = dau2->dxy(bestvtx);
+            double dzerror2 = sqrt(dau2->dzError()*dau2->dzError()+bestvzError*bestvzError);
+            double dxyerror2 = sqrt(dau2->d0Error()*dau2->d0Error()+bestvxError*bestvyError);
+            
+            double dzos2 = dzbest2/dzerror2;
+            double dxyos2 = dxybest2/dxyerror2;
+
+    //3_underlying K0s:
+
+            if (dau1_Nhits > 3 && dau2_Nhits > 3 && dlos > 5 && agl > 0.999 && TMath::Abs(dzos1) > 1 && 
+              TMath::Abs(dzos2) > 1 && TMath::Abs(dxyos1) > 1 && TMath::Abs(dxyos2) > 1)
+            {
+
+                if (ks_pt > 0.7 && ks_pt < 1.0)
+                  { 
+                      double temp = Mass_ks(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                      double temp_e = Mass_e(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                        if ( temp < 1.13568 && temp > 1.09568 ) continue;
+                          if ( temp_e < 0.015511) continue;
+
+                            InvMass_ks_2_underlying[0]->Fill(ks_mass);
+                  }
+
+                if (ks_pt > 1.0 && ks_pt < 1.4)
+                  {
+                      double temp = Mass_ks(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                      double temp_e = Mass_e(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                        if ( temp < 1.13568 && temp > 1.09568 ) continue;
+                          if ( temp_e < 0.015511) continue;
+
+                            InvMass_ks_2_underlying[1]->Fill(ks_mass);
+                  }
+
+                if (ks_pt > 1.4 && ks_pt < 1.8)
+                  {
+                      double temp = Mass_ks(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                      double temp_e = Mass_e(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                        if ( temp < 1.13568 && temp > 1.09568 ) continue;
+                          if ( temp_e < 0.015511) continue;
+
+                            InvMass_ks_2_underlying[2]->Fill(ks_mass);
+                  }
+
+                if (ks_pt > 1.8 && ks_pt < 2.2)
+                  {
+                      double temp = Mass_ks(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                      double temp_e = Mass_e(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                       if ( temp < 1.13568 && temp > 1.09568 ) continue;
+                          if ( temp_e < 0.015511) continue;
+
+                            InvMass_ks_2_underlying[3]->Fill(ks_mass);
+                  }
+
+                if (ks_pt > 2.2 && ks_pt < 2.8)
+                  {
+                      double temp = Mass_ks(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                      double temp_e = Mass_e(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                        if ( temp < 1.13568 && temp > 1.09568 ) continue;
+                          if ( temp_e < 0.015511) continue;
+
+                            InvMass_ks_2_underlying[4]->Fill(ks_mass);
+                  }
+
+
+                if (ks_pt > 2.8 && ks_pt < 3.6)
+                  {
+                      double temp = Mass_ks(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                      double temp_e = Mass_e(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                        if ( temp < 1.13568 && temp > 1.09568 ) continue;
+                          if ( temp_e < 0.015511) continue;
+
+                            InvMass_ks_2_underlying[5]->Fill(ks_mass);
+                  }
+
+                if (ks_pt > 3.6 && ks_pt < 4.6)
+                  {
+                      double temp = Mass_ks(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                      double temp_e = Mass_e(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                        if ( temp < 1.13568 && temp > 1.09568 ) continue;
+                          if ( temp_e < 0.015511) continue;
+
+                            InvMass_ks_2_underlying[6]->Fill(ks_mass);
+                  }
+
+                if (ks_pt > 4.6 && ks_pt < 6.0)
+                  {
+                      double temp = Mass_ks(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                      double temp_e = Mass_e(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                        if ( temp < 1.13568 && temp > 1.09568 ) continue;
+                          if ( temp_e < 0.015511) continue;
+
+                            InvMass_ks_2_underlying[7]->Fill(ks_mass);
+                  }
+
+                if (ks_pt > 6.0 && ks_pt < 9.0)
+                  {
+                      double temp = Mass_ks(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                      double temp_e = Mass_e(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                        if ( temp < 1.13568 && temp > 1.09568 ) continue;
+                          if ( temp_e < 0.015511) continue;
+
+                            InvMass_ks_2_underlying[8]->Fill(ks_mass);
+                  }
+
+                if (ks_pt > 9.0 && ks_pt < 12.0)
+                  {
+                      double temp = Mass_ks(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                      double temp_e = Mass_e(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                        if ( temp < 1.13568 && temp > 1.09568 ) continue;
+                          if ( temp_e < 0.015511) continue;
+
+                            InvMass_ks_2_underlying[9]->Fill(ks_mass);
+                  }
+
+            }
+             
+      }
+
+        for(unsigned it=0; it<v0candidates_la->size(); ++it){
+
+            const reco::VertexCompositeCandidate & trk = (*v0candidates_la)[it];
+            const reco:: Candidate * d1 = trk.daughter(0);
+            const reco:: Candidate * d2 = trk.daughter(1);
+
+            auto dau1 = d1->get<reco::TrackRef>();
+            auto dau2 = d2->get<reco::TrackRef>();
+
+            double eta_dau1 = dau1->eta();
+            double phi_dau1 = dau1->phi();
+            double pt_dau1 = dau1->pt();
+            double px_dau1 = dau1->px();
+            double py_dau1 = dau1->py();
+            double pz_dau1 = dau1->pz();
+            double charge_dau1 = dau1->charge();
+            double p_dau1 = dau1->p();
+
+            double eta_dau2 = dau2->eta();
+            double phi_dau2 = dau2->phi();
+            double pt_dau2 = dau2->pt();
+            double px_dau2 = dau2->px();
+            double py_dau2 = dau2->py();
+            double pz_dau2 = dau2->pz();     
+            double charge_dau2 = dau2->charge();
+            double p_dau2 = dau2->p();  
+    
+            double la_mass = trk.mass();
+            double la_pt = trk.pt();
+            double la_px = trk.px();
+            double la_py = trk.py();
+            double la_pz = trk.pz();
+            double la_eta = trk.eta();
+            double la_phi = trk.phi();
+
+            //PAngle
+            double secvz = trk.vz();
+            double secvx = trk.vx();
+            double secvy = trk.vy();
+            TVector3 ptosvec(secvx-bestvx,secvy-bestvy,secvz-bestvz);
+            TVector3 secvec(la_px,la_py,la_pz);
+
+            double agl = cos(secvec.Angle(ptosvec));
+
+           //Decay length
+            typedef ROOT::Math::SMatrix<double, 3, 3, ROOT::Math::MatRepSym<double, 3> > SMatrixSym3D;
+            typedef ROOT::Math::SVector<double, 3> SVector3;
+
+            SMatrixSym3D totalCov = vtx.covariance() + trk.vertexCovariance();
+            SVector3 distanceVector(secvx-bestvx,secvy-bestvy,secvz-bestvz);
+
+            double dl = ROOT::Math::Mag(distanceVector);
+            double dlerror = sqrt(ROOT::Math::Similarity(totalCov, distanceVector))/dl;
+            double dlos = dl/dlerror;
+            
+            //NumberofValidHits for two daughters"
+            double dau1_Nhits = dau1->numberOfValidHits();
+            double dau2_Nhits = dau2->numberOfValidHits();
+
+            //DCA
+            math::XYZPoint bestvtx(bestvx,bestvy,bestvz);
+            
+            double dzbest1 = dau1->dz(bestvtx);
+            double dxybest1 = dau1->dxy(bestvtx);
+            double dzerror1 = sqrt(dau1->dzError()*dau1->dzError()+bestvzError*bestvzError);
+            double dxyerror1 = sqrt(dau1->d0Error()*dau1->d0Error()+bestvxError*bestvyError);
+
+            double dzos1 = dzbest1/dzerror1;
+            double dxyos1 = dxybest1/dxyerror1;
+            
+            double dzbest2 = dau2->dz(bestvtx);
+            double dxybest2 = dau2->dxy(bestvtx);
+            double dzerror2 = sqrt(dau2->dzError()*dau2->dzError()+bestvzError*bestvzError);
+            double dxyerror2 = sqrt(dau2->d0Error()*dau2->d0Error()+bestvxError*bestvyError);
+            
+            double dzos2 = dzbest2/dzerror2;
+            double dxyos2 = dxybest2/dxyerror2;
+
+            if ( dau1_Nhits > 3 && dau2_Nhits > 3 && dlos > 5 && agl > 0.999 && TMath::Abs(dzos1) > 1 && TMath::Abs(dzos2) > 1 && TMath::Abs(dxyos1) > 1 && TMath::Abs(dxyos2) > 1)
+            {
+
+                if (la_pt > 0.7 && la_pt < 1.0)
+                  { 
+                      double temp = Mass_la(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                      double temp_e = Mass_e(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                        if ( temp < 0.5076 && temp > 0.4876 ) continue;
+                          if ( temp_e < 0.015511) continue;
+
+                            InvMass_la_2_underlying[0]->Fill(la_mass);
+                  }
+
+                if (la_pt > 1.0 && la_pt < 1.4)
+                  {
+                      double temp = Mass_la(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                      double temp_e = Mass_e(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                        if ( temp < 0.5076 && temp > 0.4876 ) continue;
+                          if ( temp_e < 0.015511) continue;
+
+                            InvMass_la_2_underlying[1]->Fill(la_mass);
+                  }
+
+                if (la_pt > 1.4 && la_pt < 1.8)
+                  {
+                      double temp = Mass_la(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                      double temp_e = Mass_e(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                        if ( temp < 0.5076 && temp > 0.4876 ) continue;
+                          if ( temp_e < 0.015511) continue;
+
+                            InvMass_la_2_underlying[2]->Fill(la_mass);
+                  }
+
+                if (la_pt > 1.8 && la_pt < 2.2)
+                  {
+                      double temp = Mass_la(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                      double temp_e = Mass_e(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                       if ( temp < 0.5076 && temp > 0.4876 ) continue;
+                          if ( temp_e < 0.015511) continue;
+
+                            InvMass_la_2_underlying[3]->Fill(la_mass);
+                  }
+
+                if (la_pt > 2.2 && la_pt < 2.8)
+                  {
+                      double temp = Mass_la(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                      double temp_e = Mass_e(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                        if ( temp < 0.5076 && temp > 0.4876 ) continue;
+                          if ( temp_e < 0.015511) continue;
+
+                            InvMass_la_2_underlying[4]->Fill(la_mass);
+                  }
+
+
+                if (la_pt > 2.8 && la_pt < 3.6)
+                  {
+                      double temp = Mass_la(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                      double temp_e = Mass_e(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                        if ( temp < 0.5076 && temp > 0.4876 ) continue;
+                          if ( temp_e < 0.015511) continue;
+
+                            InvMass_la_2_underlying[5]->Fill(la_mass);
+                  }
+
+                if (la_pt > 3.6 && la_pt < 4.6)
+                  {
+                      double temp = Mass_la(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                      double temp_e = Mass_e(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                        if ( temp < 0.5076 && temp > 0.4876 ) continue;
+                          if ( temp_e < 0.015511) continue;
+
+                            InvMass_la_2_underlying[6]->Fill(la_mass);
+                  }
+
+                if (la_pt > 4.6 && la_pt < 6.0)
+                  {
+                      double temp = Mass_la(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                      double temp_e = Mass_e(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                        if ( temp < 0.5076 && temp > 0.4876 ) continue;
+                          if ( temp_e < 0.015511) continue;
+
+                            InvMass_la_2_underlying[7]->Fill(la_mass);
+                  }
+
+                if (la_pt > 6.0 && la_pt < 9.0)
+                  {
+                      double temp = Mass_la(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                      double temp_e = Mass_e(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                        if ( temp < 0.5076 && temp > 0.4876 ) continue;
+                          if ( temp_e < 0.015511) continue;
+
+                            InvMass_la_2_underlying[8]->Fill(la_mass);
+                  }
+
+                if (la_pt > 9.0 && la_pt < 12.0)
+                  {
+                      double temp = Mass_la(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                      double temp_e = Mass_e(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                        if ( temp < 0.5076 && temp > 0.4876 ) continue;
+                          if ( temp_e < 0.015511) continue;
+
+                            InvMass_la_2_underlying[9]->Fill(la_mass);
+                  }
+            }
+      }
+
+  }
+
+if (nTracks > 220 && nTracks < 260){
+
+    for(unsigned it=0; it<v0candidates_ks->size(); ++it){     
+    
+            const reco::VertexCompositeCandidate & trk = (*v0candidates_ks)[it];
+            const reco:: Candidate * d1 = trk.daughter(0);
+            const reco:: Candidate * d2 = trk.daughter(1); 
+
+            auto dau1 = d1->get<reco::TrackRef>();
+            auto dau2 = d2->get<reco::TrackRef>();
+     
+            double eta_dau1 = dau1->eta();
+            double phi_dau1 = dau1->phi();
+            double pt_dau1 = dau1->pt();
+            double px_dau1 = dau1->px();
+            double py_dau1 = dau1->py();
+            double pz_dau1 = dau1->pz();
+            double charge_dau1 = dau1->charge();  
+            double p_dau1 = dau1->p();        
+
+            double eta_dau2 = dau2->eta();
+            double phi_dau2 = dau2->phi();
+            double pt_dau2 = dau2->pt();
+            double px_dau2 = dau2->px();
+            double py_dau2 = dau2->py();
+            double pz_dau2 = dau2->pz();    
+            double charge_dau2 = dau2->charge();
+            double p_dau2 = dau2->p();
+
+            double ks_mass = trk.mass();
+            double ks_pt = trk.pt();
+            double ks_px = trk.px();
+            double ks_py = trk.py();
+            double ks_pz = trk.pz();
+            double ks_eta = trk.eta();
+            double ks_phi = trk.phi();
+
+            //PAngle
+            double secvz = trk.vz();
+            double secvx = trk.vx();
+            double secvy = trk.vy();
+            TVector3 ptosvec(secvx-bestvx,secvy-bestvy,secvz-bestvz);
+            TVector3 secvec(ks_px,ks_py,ks_pz);
+
+            double agl = cos(secvec.Angle(ptosvec));
+
+           //Decay length
+            typedef ROOT::Math::SMatrix<double, 3, 3, ROOT::Math::MatRepSym<double, 3> > SMatrixSym3D;
+            typedef ROOT::Math::SVector<double, 3> SVector3;
+
+            SMatrixSym3D totalCov = vtx.covariance() + trk.vertexCovariance();
+            SVector3 distanceVector(secvx-bestvx,secvy-bestvy,secvz-bestvz);
+
+            double dl = ROOT::Math::Mag(distanceVector);
+            double dlerror = sqrt(ROOT::Math::Similarity(totalCov, distanceVector))/dl;
+            double dlos = dl/dlerror;
+            
+            //NumberofValidHits for two daughters"
+            double dau1_Nhits = dau1->numberOfValidHits();
+            double dau2_Nhits = dau2->numberOfValidHits();
+
+            //DCA
+            math::XYZPoint bestvtx(bestvx,bestvy,bestvz);
+            
+            double dzbest1 = dau1->dz(bestvtx);
+            double dxybest1 = dau1->dxy(bestvtx);
+            double dzerror1 = sqrt(dau1->dzError()*dau1->dzError()+bestvzError*bestvzError);
+            double dxyerror1 = sqrt(dau1->d0Error()*dau1->d0Error()+bestvxError*bestvyError);
+
+            double dzos1 = dzbest1/dzerror1;
+            double dxyos1 = dxybest1/dxyerror1;
+            
+            double dzbest2 = dau2->dz(bestvtx);
+            double dxybest2 = dau2->dxy(bestvtx);
+            double dzerror2 = sqrt(dau2->dzError()*dau2->dzError()+bestvzError*bestvzError);
+            double dxyerror2 = sqrt(dau2->d0Error()*dau2->d0Error()+bestvxError*bestvyError);
+            
+            double dzos2 = dzbest2/dzerror2;
+            double dxyos2 = dxybest2/dxyerror2;
+
+    //3_underlying K0s:
+
+            if (dau1_Nhits > 3 && dau2_Nhits > 3 && dlos > 5 && agl > 0.999 && TMath::Abs(dzos1) > 1 && 
+              TMath::Abs(dzos2) > 1 && TMath::Abs(dxyos1) > 1 && TMath::Abs(dxyos2) > 1)
+            {
+
+                if (ks_pt > 0.7 && ks_pt < 1.0)
+                  { 
+                      double temp = Mass_ks(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                      double temp_e = Mass_e(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                        if ( temp < 1.13568 && temp > 1.09568 ) continue;
+                          if ( temp_e < 0.015511) continue;
+
+                            InvMass_ks_3_underlying[0]->Fill(ks_mass);
+                  }
+
+                if (ks_pt > 1.0 && ks_pt < 1.4)
+                  {
+                      double temp = Mass_ks(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                      double temp_e = Mass_e(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                        if ( temp < 1.13568 && temp > 1.09568 ) continue;
+                          if ( temp_e < 0.015511) continue;
+
+                            InvMass_ks_3_underlying[1]->Fill(ks_mass);
+                  }
+
+                if (ks_pt > 1.4 && ks_pt < 1.8)
+                  {
+                      double temp = Mass_ks(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                      double temp_e = Mass_e(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                        if ( temp < 1.13568 && temp > 1.09568 ) continue;
+                          if ( temp_e < 0.015511) continue;
+
+                            InvMass_ks_3_underlying[2]->Fill(ks_mass);
+                  }
+
+                if (ks_pt > 1.8 && ks_pt < 2.2)
+                  {
+                      double temp = Mass_ks(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                      double temp_e = Mass_e(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                       if ( temp < 1.13568 && temp > 1.09568 ) continue;
+                          if ( temp_e < 0.015511) continue;
+
+                            InvMass_ks_3_underlying[3]->Fill(ks_mass);
+                  }
+
+                if (ks_pt > 2.2 && ks_pt < 2.8)
+                  {
+                      double temp = Mass_ks(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                      double temp_e = Mass_e(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                        if ( temp < 1.13568 && temp > 1.09568 ) continue;
+                          if ( temp_e < 0.015511) continue;
+
+                            InvMass_ks_3_underlying[4]->Fill(ks_mass);
+                  }
+
+
+                if (ks_pt > 2.8 && ks_pt < 3.6)
+                  {
+                      double temp = Mass_ks(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                      double temp_e = Mass_e(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                        if ( temp < 1.13568 && temp > 1.09568 ) continue;
+                          if ( temp_e < 0.015511) continue;
+
+                            InvMass_ks_3_underlying[5]->Fill(ks_mass);
+                  }
+
+                if (ks_pt > 3.6 && ks_pt < 4.6)
+                  {
+                      double temp = Mass_ks(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                      double temp_e = Mass_e(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                        if ( temp < 1.13568 && temp > 1.09568 ) continue;
+                          if ( temp_e < 0.015511) continue;
+
+                            InvMass_ks_3_underlying[6]->Fill(ks_mass);
+                  }
+
+                if (ks_pt > 4.6 && ks_pt < 6.0)
+                  {
+                      double temp = Mass_ks(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                      double temp_e = Mass_e(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                        if ( temp < 1.13568 && temp > 1.09568 ) continue;
+                          if ( temp_e < 0.015511) continue;
+
+                            InvMass_ks_3_underlying[7]->Fill(ks_mass);
+                  }
+
+                if (ks_pt > 6.0 && ks_pt < 9.0)
+                  {
+                      double temp = Mass_ks(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                      double temp_e = Mass_e(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                        if ( temp < 1.13568 && temp > 1.09568 ) continue;
+                          if ( temp_e < 0.015511) continue;
+
+                            InvMass_ks_3_underlying[8]->Fill(ks_mass);
+                  }
+
+                if (ks_pt > 9.0 && ks_pt < 12.0)
+                  {
+                      double temp = Mass_ks(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                      double temp_e = Mass_e(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                        if ( temp < 1.13568 && temp > 1.09568 ) continue;
+                          if ( temp_e < 0.015511) continue;
+
+                            InvMass_ks_3_underlying[9]->Fill(ks_mass);
+                  }
+
+            }
+             
+      }
+
+        for(unsigned it=0; it<v0candidates_la->size(); ++it){
+
+            const reco::VertexCompositeCandidate & trk = (*v0candidates_la)[it];
+            const reco:: Candidate * d1 = trk.daughter(0);
+            const reco:: Candidate * d2 = trk.daughter(1);
+
+            auto dau1 = d1->get<reco::TrackRef>();
+            auto dau2 = d2->get<reco::TrackRef>();
+
+            double eta_dau1 = dau1->eta();
+            double phi_dau1 = dau1->phi();
+            double pt_dau1 = dau1->pt();
+            double px_dau1 = dau1->px();
+            double py_dau1 = dau1->py();
+            double pz_dau1 = dau1->pz();
+            double charge_dau1 = dau1->charge();
+            double p_dau1 = dau1->p();
+
+            double eta_dau2 = dau2->eta();
+            double phi_dau2 = dau2->phi();
+            double pt_dau2 = dau2->pt();
+            double px_dau2 = dau2->px();
+            double py_dau2 = dau2->py();
+            double pz_dau2 = dau2->pz();     
+            double charge_dau2 = dau2->charge();
+            double p_dau2 = dau2->p();  
+    
+            double la_mass = trk.mass();
+            double la_pt = trk.pt();
+            double la_px = trk.px();
+            double la_py = trk.py();
+            double la_pz = trk.pz();
+            double la_eta = trk.eta();
+            double la_phi = trk.phi();
+
+            //PAngle
+            double secvz = trk.vz();
+            double secvx = trk.vx();
+            double secvy = trk.vy();
+            TVector3 ptosvec(secvx-bestvx,secvy-bestvy,secvz-bestvz);
+            TVector3 secvec(la_px,la_py,la_pz);
+
+            double agl = cos(secvec.Angle(ptosvec));
+
+           //Decay length
+            typedef ROOT::Math::SMatrix<double, 3, 3, ROOT::Math::MatRepSym<double, 3> > SMatrixSym3D;
+            typedef ROOT::Math::SVector<double, 3> SVector3;
+
+            SMatrixSym3D totalCov = vtx.covariance() + trk.vertexCovariance();
+            SVector3 distanceVector(secvx-bestvx,secvy-bestvy,secvz-bestvz);
+
+            double dl = ROOT::Math::Mag(distanceVector);
+            double dlerror = sqrt(ROOT::Math::Similarity(totalCov, distanceVector))/dl;
+            double dlos = dl/dlerror;
+            
+            //NumberofValidHits for two daughters"
+            double dau1_Nhits = dau1->numberOfValidHits();
+            double dau2_Nhits = dau2->numberOfValidHits();
+
+            //DCA
+            math::XYZPoint bestvtx(bestvx,bestvy,bestvz);
+            
+            double dzbest1 = dau1->dz(bestvtx);
+            double dxybest1 = dau1->dxy(bestvtx);
+            double dzerror1 = sqrt(dau1->dzError()*dau1->dzError()+bestvzError*bestvzError);
+            double dxyerror1 = sqrt(dau1->d0Error()*dau1->d0Error()+bestvxError*bestvyError);
+
+            double dzos1 = dzbest1/dzerror1;
+            double dxyos1 = dxybest1/dxyerror1;
+            
+            double dzbest2 = dau2->dz(bestvtx);
+            double dxybest2 = dau2->dxy(bestvtx);
+            double dzerror2 = sqrt(dau2->dzError()*dau2->dzError()+bestvzError*bestvzError);
+            double dxyerror2 = sqrt(dau2->d0Error()*dau2->d0Error()+bestvxError*bestvyError);
+            
+            double dzos2 = dzbest2/dzerror2;
+            double dxyos2 = dxybest2/dxyerror2;
+
+            if ( dau1_Nhits > 3 && dau2_Nhits > 3 && dlos > 5 && agl > 0.999 && TMath::Abs(dzos1) > 1 && TMath::Abs(dzos2) > 1 && TMath::Abs(dxyos1) > 1 && TMath::Abs(dxyos2) > 1)
+            {
+
+                if (la_pt > 0.7 && la_pt < 1.0)
+                  { 
+                      double temp = Mass_la(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                      double temp_e = Mass_e(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                        if ( temp < 0.5076 && temp > 0.4876 ) continue;
+                          if ( temp_e < 0.015511) continue;
+
+                            InvMass_la_3_underlying[0]->Fill(la_mass);
+                  }
+
+                if (la_pt > 1.0 && la_pt < 1.4)
+                  {
+                      double temp = Mass_la(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                      double temp_e = Mass_e(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                        if ( temp < 0.5076 && temp > 0.4876 ) continue;
+                          if ( temp_e < 0.015511) continue;
+
+                            InvMass_la_3_underlying[1]->Fill(la_mass);
+                  }
+
+                if (la_pt > 1.4 && la_pt < 1.8)
+                  {
+                      double temp = Mass_la(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                      double temp_e = Mass_e(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                        if ( temp < 0.5076 && temp > 0.4876 ) continue;
+                          if ( temp_e < 0.015511) continue;
+
+                            InvMass_la_3_underlying[2]->Fill(la_mass);
+                  }
+
+                if (la_pt > 1.8 && la_pt < 2.2)
+                  {
+                      double temp = Mass_la(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                      double temp_e = Mass_e(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                       if ( temp < 0.5076 && temp > 0.4876 ) continue;
+                          if ( temp_e < 0.015511) continue;
+
+                            InvMass_la_3_underlying[3]->Fill(la_mass);
+                  }
+
+                if (la_pt > 2.2 && la_pt < 2.8)
+                  {
+                      double temp = Mass_la(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                      double temp_e = Mass_e(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                        if ( temp < 0.5076 && temp > 0.4876 ) continue;
+                          if ( temp_e < 0.015511) continue;
+
+                            InvMass_la_3_underlying[4]->Fill(la_mass);
+                  }
+
+
+                if (la_pt > 2.8 && la_pt < 3.6)
+                  {
+                      double temp = Mass_la(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                      double temp_e = Mass_e(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                        if ( temp < 0.5076 && temp > 0.4876 ) continue;
+                          if ( temp_e < 0.015511) continue;
+
+                            InvMass_la_3_underlying[5]->Fill(la_mass);
+                  }
+
+                if (la_pt > 3.6 && la_pt < 4.6)
+                  {
+                      double temp = Mass_la(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                      double temp_e = Mass_e(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                        if ( temp < 0.5076 && temp > 0.4876 ) continue;
+                          if ( temp_e < 0.015511) continue;
+
+                            InvMass_la_3_underlying[6]->Fill(la_mass);
+                  }
+
+                if (la_pt > 4.6 && la_pt < 6.0)
+                  {
+                      double temp = Mass_la(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                      double temp_e = Mass_e(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                        if ( temp < 0.5076 && temp > 0.4876 ) continue;
+                          if ( temp_e < 0.015511) continue;
+
+                            InvMass_la_3_underlying[7]->Fill(la_mass);
+                  }
+
+                if (la_pt > 6.0 && la_pt < 9.0)
+                  {
+                      double temp = Mass_la(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                      double temp_e = Mass_e(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                        if ( temp < 0.5076 && temp > 0.4876 ) continue;
+                          if ( temp_e < 0.015511) continue;
+
+                            InvMass_la_3_underlying[8]->Fill(la_mass);
+                  }
+
+                if (la_pt > 9.0 && la_pt < 12.0)
+                  {
+                      double temp = Mass_la(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                      double temp_e = Mass_e(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
+                        if ( temp < 0.5076 && temp > 0.4876 ) continue;
+                          if ( temp_e < 0.015511) continue;
+
+                            InvMass_la_3_underlying[9]->Fill(la_mass);
+                  }
+            }
+      }
+
+  }
 
-                          InvMass_ks_underlying[2]->Fill(ks_mass);
-                }
 
-              if (ks_pt > 1.8 && ks_pt < 2.2)
-                {
-                    double temp = Mass_ks(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
-                    double temp_e = Mass_e(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
-                     if ( temp < 1.13568 && temp > 1.09568 ) continue;
-                        if ( temp_e < 0.015511) continue;
-
-                          InvMass_ks_underlying[3]->Fill(ks_mass);
-                }
-
-              if (ks_pt > 2.2 && ks_pt < 2.8)
-                {
-                    double temp = Mass_ks(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
-                    double temp_e = Mass_e(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
-                      if ( temp < 1.13568 && temp > 1.09568 ) continue;
-                        if ( temp_e < 0.015511) continue;
-
-                          InvMass_ks_underlying[4]->Fill(ks_mass);
-                }
-
-
-              if (ks_pt > 2.8 && ks_pt < 3.6)
-                {
-                    double temp = Mass_ks(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
-                    double temp_e = Mass_e(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
-                      if ( temp < 1.13568 && temp > 1.09568 ) continue;
-                        if ( temp_e < 0.015511) continue;
-
-                          InvMass_ks_underlying[5]->Fill(ks_mass);
-                }
-
-              if (ks_pt > 3.6 && ks_pt < 4.6)
-                {
-                    double temp = Mass_ks(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
-                    double temp_e = Mass_e(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
-                      if ( temp < 1.13568 && temp > 1.09568 ) continue;
-                        if ( temp_e < 0.015511) continue;
-
-                          InvMass_ks_underlying[6]->Fill(ks_mass);
-                }
-
-              if (ks_pt > 4.6 && ks_pt < 6.0)
-                {
-                    double temp = Mass_ks(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
-                    double temp_e = Mass_e(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
-                      if ( temp < 1.13568 && temp > 1.09568 ) continue;
-                        if ( temp_e < 0.015511) continue;
-
-                          InvMass_ks_underlying[7]->Fill(ks_mass);
-                }
-
-              if (ks_pt > 6.0 && ks_pt < 9.0)
-                {
-                    double temp = Mass_ks(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
-                    double temp_e = Mass_e(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
-                      if ( temp < 1.13568 && temp > 1.09568 ) continue;
-                        if ( temp_e < 0.015511) continue;
-
-                          InvMass_ks_underlying[8]->Fill(ks_mass);
-                }
-
-              if (ks_pt > 9.0 && ks_pt < 12.0)
-                {
-                    double temp = Mass_ks(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
-                    double temp_e = Mass_e(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
-                      if ( temp < 1.13568 && temp > 1.09568 ) continue;
-                        if ( temp_e < 0.015511) continue;
-
-                          InvMass_ks_underlying[9]->Fill(ks_mass);
-                }
-
-          }
-
-
-//in jet K0s:
-
-          for( unsigned it = 0; it < jets->size(); ++it ){
-
-              const reco::PFJet & pfj = (*jets)[it];
-
-              double jet_pt = pfj.pt();
-              double jet_eta = pfj.eta();
-              double jet_phi = pfj.phi();
-              double jet_p = pfj.p();
-
-              if ( jet_pt < 20 || TMath::Abs(jet_eta) > 2.0 ) continue;
-
-              double delta_ks_eta = (jet_eta) - (ks_eta);
-              double delta_ks_phi = (jet_phi) - (ks_phi);
-              double KSconeSize = 0.0;
-
-              if ( delta_ks_phi > 3.14 ){
-
-                 KSconeSize = sqrt((6.28 - delta_ks_phi)*(6.28 - delta_ks_phi)+(delta_ks_eta)*(delta_ks_eta));
-              }
-              else if ( delta_ks_phi < -3.14 ){
-
-                 KSconeSize = sqrt((6.28 + delta_ks_phi)*(6.28 + delta_ks_phi)+(delta_ks_eta)*(delta_ks_eta));
-
-              }
-              else{
-
-                 KSconeSize = sqrt((delta_ks_phi)*(delta_ks_phi)+(delta_ks_eta)*(delta_ks_eta));
-
-              }
-
-              if ( KSconeSize < 0.3 ){
-
-          
-                if ( dau1_Nhits > 3 && dau2_Nhits > 3 && dlos > 5 && agl > 0.999 && TMath::Abs(dzos1) > 1 && TMath::Abs(dzos2) > 1 && TMath::Abs(dxyos1) > 1 && TMath::Abs(dxyos2) > 1)
-                {
-      //ss
-                      if (ks_pt > 0.7 && ks_pt < 1.0)
-                        {
-                            double temp = Mass_ks(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
-                            double temp_e = Mass_e(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
-                              if ( temp < 1.13568 && temp > 1.09568 ) continue;
-                                if ( temp_e < 0.015511) continue;
-
-                                  InvMass_ks[0]->Fill(ks_mass);
-                        }
-
-                      if (ks_pt > 1.0 && ks_pt < 1.4)
-                        {
-                            double temp = Mass_ks(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
-                            double temp_e = Mass_e(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
-                              if ( temp < 1.13568 && temp > 1.09568 ) continue;
-                                if ( temp_e < 0.015511) continue;
-
-                                  InvMass_ks[1]->Fill(ks_mass);
-                        }
-
-                      if (ks_pt > 1.4 && ks_pt < 1.8)
-                        {
-                            double temp = Mass_ks(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
-                            double temp_e = Mass_e(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
-                              if ( temp < 1.13568 && temp > 1.09568 ) continue;
-                                if ( temp_e < 0.015511) continue;
-
-                                  InvMass_ks[2]->Fill(ks_mass);
-                        }
-
-                      if (ks_pt > 1.8 && ks_pt < 2.2)
-                        {
-                          double temp = Mass_ks(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
-                          double temp_e = Mass_e(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
-                           if ( temp < 1.13568 && temp > 1.09568 ) continue;
-                              if ( temp_e < 0.015511) continue;
-
-                                InvMass_ks[3]->Fill(ks_mass);
-                        }
-
-                      if (ks_pt > 2.2 && ks_pt < 2.8)
-                        {
-                          double temp = Mass_ks(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
-                          double temp_e = Mass_e(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
-                            if ( temp < 1.13568 && temp > 1.09568 ) continue;
-                              if ( temp_e < 0.015511) continue;
-
-                                InvMass_ks[4]->Fill(ks_mass);
-                        }
-
-                      if (ks_pt > 2.8 && ks_pt < 3.6)
-                        {
-                            double temp = Mass_ks(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
-                            double temp_e = Mass_e(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
-                              if ( temp < 1.13568 && temp > 1.09568 ) continue;
-                                if ( temp_e < 0.015511) continue;
-
-                                  InvMass_ks[5]->Fill(ks_mass);
-                        }
-
-                      if (ks_pt > 3.6 && ks_pt < 4.6)
-                        {
-                            double temp = Mass_ks(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
-                            double temp_e = Mass_e(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
-                              if ( temp < 1.13568 && temp > 1.09568 ) continue;
-                                if ( temp_e < 0.015511) continue;
-
-                                  InvMass_ks[6]->Fill(ks_mass);
-                        }
-
-                      if (ks_pt > 4.6 && ks_pt < 6.0)
-                        {
-                            double temp = Mass_ks(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
-                            double temp_e = Mass_e(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
-                              if ( temp < 1.13568 && temp > 1.09568 ) continue;
-                                if ( temp_e < 0.015511) continue;
-
-                                  InvMass_ks[7]->Fill(ks_mass);
-                        }
-
-                      if (ks_pt > 6.0 && ks_pt < 9.0)
-                        {
-                            double temp = Mass_ks(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
-                            double temp_e = Mass_e(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
-                              if ( temp < 1.13568 && temp > 1.09568 ) continue;
-                                if ( temp_e < 0.015511) continue;
-
-                                  InvMass_ks[8]->Fill(ks_mass);
-                        }
-
-                      if (ks_pt > 9.0 && ks_pt < 12.0)
-                        {
-                            double temp = Mass_ks(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
-                            double temp_e = Mass_e(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
-                              if ( temp < 1.13568 && temp > 1.09568 ) continue;
-                                if ( temp_e < 0.015511) continue;
-
-                                  InvMass_ks[9]->Fill(ks_mass);
-                        }
-
-                  
-                }
-              }  
-          }
-
-    }
-
-//la V0 candidate:
-
-    for(unsigned it=0; it<v0candidates_la->size(); ++it){
-
-          const reco::VertexCompositeCandidate & trk = (*v0candidates_la)[it];
-          const reco:: Candidate * d1 = trk.daughter(0);
-          const reco:: Candidate * d2 = trk.daughter(1);
-
-          auto dau1 = d1->get<reco::TrackRef>();
-          auto dau2 = d2->get<reco::TrackRef>();
-
-          double eta_dau1 = dau1->eta();
-          double phi_dau1 = dau1->phi();
-          double pt_dau1 = dau1->pt();
-          double px_dau1 = dau1->px();
-          double py_dau1 = dau1->py();
-          double pz_dau1 = dau1->pz();
-          double charge_dau1 = dau1->charge();
-          double p_dau1 = dau1->p();
-
-          double eta_dau2 = dau2->eta();
-          double phi_dau2 = dau2->phi();
-          double pt_dau2 = dau2->pt();
-          double px_dau2 = dau2->px();
-          double py_dau2 = dau2->py();
-          double pz_dau2 = dau2->pz();     
-          double charge_dau2 = dau2->charge();
-          double p_dau2 = dau2->p();  
-  
-          double la_mass = trk.mass();
-          double la_pt = trk.pt();
-          double la_px = trk.px();
-          double la_py = trk.py();
-          double la_pz = trk.pz();
-          double la_eta = trk.eta();
-          double la_phi = trk.phi();
-
-          //PAngle
-          double secvz = trk.vz();
-          double secvx = trk.vx();
-          double secvy = trk.vy();
-          TVector3 ptosvec(secvx-bestvx,secvy-bestvy,secvz-bestvz);
-          TVector3 secvec(la_px,la_py,la_pz);
-
-          double agl = cos(secvec.Angle(ptosvec));
-
-         //Decay length
-          typedef ROOT::Math::SMatrix<double, 3, 3, ROOT::Math::MatRepSym<double, 3> > SMatrixSym3D;
-          typedef ROOT::Math::SVector<double, 3> SVector3;
-
-          SMatrixSym3D totalCov = vtx.covariance() + trk.vertexCovariance();
-          SVector3 distanceVector(secvx-bestvx,secvy-bestvy,secvz-bestvz);
-
-          double dl = ROOT::Math::Mag(distanceVector);
-          double dlerror = sqrt(ROOT::Math::Similarity(totalCov, distanceVector))/dl;
-          double dlos = dl/dlerror;
-          
-          //NumberofValidHits for two daughters"
-          double dau1_Nhits = dau1->numberOfValidHits();
-          double dau2_Nhits = dau2->numberOfValidHits();
-
-          //DCA
-          math::XYZPoint bestvtx(bestvx,bestvy,bestvz);
-          
-          double dzbest1 = dau1->dz(bestvtx);
-          double dxybest1 = dau1->dxy(bestvtx);
-          double dzerror1 = sqrt(dau1->dzError()*dau1->dzError()+bestvzError*bestvzError);
-          double dxyerror1 = sqrt(dau1->d0Error()*dau1->d0Error()+bestvxError*bestvyError);
-
-          double dzos1 = dzbest1/dzerror1;
-          double dxyos1 = dxybest1/dxyerror1;
-          
-          double dzbest2 = dau2->dz(bestvtx);
-          double dxybest2 = dau2->dxy(bestvtx);
-          double dzerror2 = sqrt(dau2->dzError()*dau2->dzError()+bestvzError*bestvzError);
-          double dxyerror2 = sqrt(dau2->d0Error()*dau2->d0Error()+bestvxError*bestvyError);
-          
-          double dzos2 = dzbest2/dzerror2;
-          double dxyos2 = dxybest2/dxyerror2;
-
-//underlying Lambdas:
-
-          if ( dau1_Nhits > 3 && dau2_Nhits > 3 && dlos > 5 && agl > 0.999 && TMath::Abs(dzos1) > 1 && TMath::Abs(dzos2) > 1 && TMath::Abs(dxyos1) > 1 && TMath::Abs(dxyos2) > 1)
-          {
-
-              if (la_pt > 0.7 && la_pt < 1.0)
-                { 
-                    double temp = Mass_la(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
-                    double temp_e = Mass_e(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
-                      if ( temp < 0.5076 && temp > 0.4876 ) continue;
-                        if ( temp_e < 0.015511) continue;
-
-                          InvMass_la_underlying[0]->Fill(la_mass);
-                }
-
-              if (la_pt > 1.0 && la_pt < 1.4)
-                {
-                    double temp = Mass_la(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
-                    double temp_e = Mass_e(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
-                      if ( temp < 0.5076 && temp > 0.4876 ) continue;
-                        if ( temp_e < 0.015511) continue;
-
-                          InvMass_la_underlying[1]->Fill(la_mass);
-                }
-
-              if (la_pt > 1.4 && la_pt < 1.8)
-                {
-                    double temp = Mass_la(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
-                    double temp_e = Mass_e(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
-                      if ( temp < 0.5076 && temp > 0.4876 ) continue;
-                        if ( temp_e < 0.015511) continue;
-
-                          InvMass_la_underlying[2]->Fill(la_mass);
-                }
-
-              if (la_pt > 1.8 && la_pt < 2.2)
-                {
-                    double temp = Mass_la(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
-                    double temp_e = Mass_e(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
-                     if ( temp < 0.5076 && temp > 0.4876 ) continue;
-                        if ( temp_e < 0.015511) continue;
-
-                          InvMass_la_underlying[3]->Fill(la_mass);
-                }
-
-              if (la_pt > 2.2 && la_pt < 2.8)
-                {
-                    double temp = Mass_la(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
-                    double temp_e = Mass_e(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
-                      if ( temp < 0.5076 && temp > 0.4876 ) continue;
-                        if ( temp_e < 0.015511) continue;
-
-                          InvMass_la_underlying[4]->Fill(la_mass);
-                }
-
-
-              if (la_pt > 2.8 && la_pt < 3.6)
-                {
-                    double temp = Mass_la(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
-                    double temp_e = Mass_e(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
-                      if ( temp < 0.5076 && temp > 0.4876 ) continue;
-                        if ( temp_e < 0.015511) continue;
-
-                          InvMass_la_underlying[5]->Fill(la_mass);
-                }
-
-              if (la_pt > 3.6 && la_pt < 4.6)
-                {
-                    double temp = Mass_la(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
-                    double temp_e = Mass_e(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
-                      if ( temp < 0.5076 && temp > 0.4876 ) continue;
-                        if ( temp_e < 0.015511) continue;
-
-                          InvMass_la_underlying[6]->Fill(la_mass);
-                }
-
-              if (la_pt > 4.6 && la_pt < 6.0)
-                {
-                    double temp = Mass_la(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
-                    double temp_e = Mass_e(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
-                      if ( temp < 0.5076 && temp > 0.4876 ) continue;
-                        if ( temp_e < 0.015511) continue;
-
-                          InvMass_la_underlying[7]->Fill(la_mass);
-                }
-
-              if (la_pt > 6.0 && la_pt < 9.0)
-                {
-                    double temp = Mass_la(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
-                    double temp_e = Mass_e(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
-                      if ( temp < 0.5076 && temp > 0.4876 ) continue;
-                        if ( temp_e < 0.015511) continue;
-
-                          InvMass_la_underlying[8]->Fill(la_mass);
-                }
-
-              if (la_pt > 9.0 && la_pt < 12.0)
-                {
-                    double temp = Mass_la(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
-                    double temp_e = Mass_e(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
-                      if ( temp < 0.5076 && temp > 0.4876 ) continue;
-                        if ( temp_e < 0.015511) continue;
-
-                          InvMass_la_underlying[9]->Fill(la_mass);
-                }
-
-          }
-
-//in jet K0s:
-
-          for( unsigned it = 0; it < jets->size(); ++it ){
-
-              const reco::PFJet & pfj = (*jets)[it];
-
-              double jet_pt = pfj.pt();
-              double jet_eta = pfj.eta();
-              double jet_phi = pfj.phi();
-              double jet_p = pfj.p();
-
-              if ( jet_pt < 20 || TMath::Abs(jet_eta) > 2.0 ) continue;
-
-              double delta_la_eta = (jet_eta) - (la_eta);
-              double delta_la_phi = (jet_phi) - (la_phi);
-              double LAconeSize = 0.0;
-
-              if ( delta_la_phi > 3.14 ){
-
-                 LAconeSize = sqrt((6.28 - delta_la_phi)*(6.28 - delta_la_phi)+(delta_la_eta)*(delta_la_eta));
-              }
-              else if ( delta_la_phi < -3.14 ){
-
-                 LAconeSize = sqrt((6.28 + delta_la_phi)*(6.28 + delta_la_phi)+(delta_la_eta)*(delta_la_eta));
-
-              }
-              else{
-
-                 LAconeSize = sqrt((delta_la_phi)*(delta_la_phi)+(delta_la_eta)*(delta_la_eta));
-
-              }
-
-              if( LAconeSize < 0.3 ){
-
-                 if (dau1_Nhits > 3 && dau2_Nhits > 3 && dlos > 5 && agl > 0.999 && TMath::Abs(dzos1) > 1 && TMath::Abs(dzos2) > 1 && TMath::Abs(dxyos1) > 1 && TMath::Abs(dxyos2) > 1 ){
-
-                      if (la_pt > 0.7 && la_pt < 1.0)
-                        {
-                          
-                            double temp = Mass_la(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
-                            double temp_e = Mass_e(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
-                              if ( temp < 0.5076 && temp > 0.4876 ) continue;
-                                if ( temp_e < 0.015511) continue;
-
-                                  InvMass_la[0]->Fill(la_mass);
-                        }
-
-                      if (la_pt > 1.0 && la_pt < 1.4)
-                        {
-                          
-                            double temp = Mass_la(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
-                            double temp_e = Mass_e(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
-                              if ( temp < 0.5076 && temp > 0.4876 ) continue;
-                                if ( temp_e < 0.015511) continue;
-
-                                  InvMass_la[1]->Fill(la_mass);
-                        }
-
-                      if (la_pt > 1.4 && la_pt < 1.8)
-                        {
-                          
-                            double temp = Mass_la(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
-                            double temp_e = Mass_e(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
-                              if ( temp < 0.5076 && temp > 0.4876 ) continue;
-                                if ( temp_e < 0.015511) continue;
-
-                                  InvMass_la[2]->Fill(la_mass);
-                        }
-
-                        if (la_pt > 1.8 && la_pt < 2.2)
-                        {
-                          
-                            double temp = Mass_la(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
-                            double temp_e = Mass_e(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
-                             if ( temp < 0.5076 && temp > 0.4876 ) continue;
-                                if ( temp_e < 0.015511) continue;
-
-                                  InvMass_la[3]->Fill(la_mass);
-                        }
-
-                        if (la_pt > 2.2 && la_pt < 2.8)
-                          {
-                           
-                            double temp = Mass_la(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
-                            double temp_e = Mass_e(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
-                              if ( temp < 0.5076 && temp > 0.4876 ) continue;
-                                if ( temp_e < 0.015511) continue;
-
-                                  InvMass_la[4]->Fill(la_mass);
-                          }
-
-
-                        if (la_pt > 2.8 && la_pt < 3.6)
-                          {
-                            
-                              double temp = Mass_la(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
-                              double temp_e = Mass_e(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
-                                if ( temp < 0.5076 && temp > 0.4876 ) continue;
-                                  if ( temp_e < 0.015511) continue;
-
-                                    InvMass_la[5]->Fill(la_mass);
-                          }
-
-                        if (la_pt > 3.6 && la_pt < 4.6)
-                          {
-                            
-                              double temp = Mass_la(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
-                              double temp_e = Mass_e(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
-                                if ( temp < 0.5076 && temp > 0.4876 ) continue;
-                                  if ( temp_e < 0.015511) continue;
-
-                                    InvMass_la[6]->Fill(la_mass);
-                          }
-
-                        if (la_pt > 4.6 && la_pt < 6.0)
-                          {
-                            
-                              double temp = Mass_la(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
-                              double temp_e = Mass_e(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
-                                if ( temp < 0.5076 && temp > 0.4876 ) continue;
-                                  if ( temp_e < 0.015511) continue;
-
-                                    InvMass_la[7]->Fill(la_mass);
-                          }
-
-                        if (la_pt > 6.0 && la_pt < 9.0)
-                          {
-                            
-                              double temp = Mass_la(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
-                              double temp_e = Mass_e(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
-                                if ( temp < 0.5076 && temp > 0.4876 ) continue;
-                                  if ( temp_e < 0.015511) continue;
-
-                                    InvMass_la[8]->Fill(la_mass);
-                          }
-
-                        if (la_pt > 9.0 && la_pt < 12.0)
-                          {
-                            
-                              double temp = Mass_la(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
-                              double temp_e = Mass_e(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
-                                if ( temp < 0.5076 && temp > 0.4876 ) continue;
-                                  if ( temp_e < 0.015511) continue;
-
-                                    InvMass_la[9]->Fill(la_mass);
-                          }
-                    }
-              }
-          }
-    }
 }
 // ------------ method called once each job just before starting event loop  ------------
 void 
@@ -1005,11 +1849,19 @@ V0AnalyzerHisto::beginJob()
   TH1D::SetDefaultSumw2();
 
     for(int i = 0; i<10; i++)
-     {
-       InvMass_ks_underlying[i] = fs->make<TH1D>(Form("InvMass_ks_underlying%d",i),";ks_mass(GeV/c^{2});#Events",360,0.44,0.56);
-       InvMass_ks[i] = fs->make<TH1D>(Form("InvMass_ks%d",i),";ks_mass(GeV);#Events",360,0.44,0.56);
-       InvMass_la_underlying[i] = fs->make<TH1D>(Form("InvMass_la_underlying%d",i),";la_mass(GeV/c^{2});#Events",360,1.08,1.16);
-       InvMass_la[i] = fs->make<TH1D>(Form("InvMass_la%d",i),";la_mass(GeV);#Events",360,1.08,1.16);
+     { 
+
+       InvMass_ks_0_underlying[i] = fs->make<TH1D>(Form("InvMass_ks_0_underlying%d",i),";mass(GeV/c^{2});#Events",360,0.44,0.56);
+       InvMass_ks_1_underlying[i] = fs->make<TH1D>(Form("InvMass_ks_1_underlying%d",i),";mass(GeV/c^{2});#Events",360,0.44,0.56);
+       InvMass_ks_2_underlying[i] = fs->make<TH1D>(Form("InvMass_ks_2_underlying%d",i),";mass(GeV/c^{2});#Events",360,0.44,0.56);
+       InvMass_ks_3_underlying[i] = fs->make<TH1D>(Form("InvMass_ks_3_underlying%d",i),";mass(GeV/c^{2});#Events",360,0.44,0.56);
+       
+       InvMass_la_0_underlying[i] = fs->make<TH1D>(Form("InvMass_la_0_underlying%d",i),";mass(GeV/c^{2});#Events",360,1.08,1.16);
+       InvMass_la_1_underlying[i] = fs->make<TH1D>(Form("InvMass_la_1_underlying%d",i),";mass(GeV/c^{2});#Events",360,1.08,1.16);
+       InvMass_la_2_underlying[i] = fs->make<TH1D>(Form("InvMass_la_2_underlying%d",i),";mass(GeV/c^{2});#Events",360,1.08,1.16);
+       InvMass_la_3_underlying[i] = fs->make<TH1D>(Form("InvMass_la_3_underlying%d",i),";mass(GeV/c^{2});#Events",360,1.08,1.16);
+       
+       
      }
 }
 

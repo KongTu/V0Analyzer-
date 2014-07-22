@@ -2,6 +2,12 @@ import FWCore.ParameterSet.Config as cms
 
 process = cms.Process("Demo")
 
+import HLTrigger.HLTfilters.hltHighLevel_cfi
+process.hltHM = HLTrigger.HLTfilters.hltHighLevel_cfi.hltHighLevel.clone()
+process.hltHM.HLTPaths = ['HLT_PAPixelTracks_Multiplicity100_v*','HLT_PAPixelTracks_Multiplicity130_v*','HLT_PAPixelTracks_Multiplicity160_v*','HLT_PAPixelTracks_Multiplicity190_v*']
+process.hltHM.andOr = cms.bool(True)
+process.hltHM.throw = cms.bool(False)
+
 process.ana = cms.EDAnalyzer('V0Analyzer',
                           trackPtMin = cms.untracked.double(0.4),
                           simTrackPtMin = cms.untracked.double(0.4),
@@ -75,4 +81,4 @@ process.source = cms.Source("PoolSource",
 process.TFileService = cms.Service("TFileService",fileName = cms.string("V0reco_pPb_jetTrig.root"))
 
 
-process.p = cms.Path(process.ana)
+process.p = cms.Path(process.hltHM*process.ana)

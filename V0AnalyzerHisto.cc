@@ -176,9 +176,14 @@ private:
   std::string jetSrc_;
   int multmin_;
   int multmax_;
+
+  bool doGenParticle_;
   
   TH3D* InvMass_ks_underlying;
   TH3D* InvMass_la_underlying;
+
+  TH3D* genKS_underlying;
+  TH3D* genLA_underlying;
 
 };
 
@@ -206,6 +211,8 @@ V0AnalyzerHisto::V0AnalyzerHisto(const edm::ParameterSet& iConfig)
   genParticleSrc_ = iConfig.getParameter<edm::InputTag>("genParticleSrc");
   multmin_ = iConfig.getUntrackedParameter<int>("multmin", 120);
   multmax_ = iConfig.getUntrackedParameter<int>("multmax", 150); 
+
+  doGenParticle_ = iConfig.getUntrackedParameter<bool>("doGenParticle",false);
   
 }
 
@@ -308,6 +315,49 @@ V0AnalyzerHisto::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
 
         nTracks++;
         
+  } 
+
+  if( doGenParticle_ ){
+
+      edm::Handle<reco::GenParticleCollection> genParticleCollection;
+      iEvent.getByLabel(genParticleSrc_, genParticleCollection);
+
+      for(unsigned it=0; it<genParticleCollection->size(); ++it) {
+
+        const reco::GenParticle & genCand = (*genParticleCollection)[it];
+        int id = genCand.pdgId();
+        int status = genCand.status();
+
+      if ( status == 1 ){
+
+        if( id == 310 ){
+
+            genKS_underlying->Fill(genCand.eta(), genCand.pt(), genCand.mass());
+        }
+
+    //Finding mother:
+
+        int mid = 0;
+        if( TMath::Abs(id) == 3122 ){
+
+          if(genCand.numberOfMothers()==1){
+            const reco::Candidate * mom = genCand.mother();
+            mid = mom->pdgId();
+            if(mom->numberOfMothers()==1){
+              const reco::Candidate * mom1 = mom->mother();
+              mid = mom1->pdgId();
+            }
+          }
+
+          if (TMath::Abs(mid) != 3322 && TMath::Abs(mid) != 3312 && TMath::Abs(mid) != 3324 && TMath::Abs(mid) != 3314 && TMath::Abs(mid) != 3334){
+
+            genLA_underlying->Fill( genCand.eta(), genCand.pt(), genCand.mass() );
+          }
+        }
+     
+       }
+      }
+
   } 
 
   edm::Handle<reco::PFJetCollection> jets;
@@ -532,6 +582,8 @@ V0AnalyzerHisto::beginJob()
 
   InvMass_ks_underlying = fs->make<TH3D>("InvMass_ks_underlying",";eta;pT(GeV/c);mass(GeV/c^{2})",6,-2.4,2.4,100,0,10,360,0.44,0.56);
   InvMass_la_underlying = fs->make<TH3D>("InvMass_la_underlying",";eta;pT(GeV/c);mass(GeV/c^{2})",6,-2.4,2.4,100,0,10,360,1.08,1.16);
+  genKS_underlying = fs->make<TH3D>("genKS_underlying",";eta;pT(GeV/c);mass(GeV/c^{2})",6,-2.4,2.4,100,0,10,360,0.44,0.56);
+  genLA_underlying = fs->make<TH3D>("genLA_underlying",";eta;pT(GeV/c);mass(GeV/c^{2})",6,-2.4,2.4,100,0,10,360,1.08,1.16);
 }
 
 // ------------ method called once each job just after ending the event loop  ------------

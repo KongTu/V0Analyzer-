@@ -233,8 +233,8 @@ double Mass_ks(double px_1,double py_1,double pz_1,double px_2,double py_2,doubl
 {
        
   double temp = 0.0;
-        double E1 = sqrt((px_1*px_1+py_1*py_1+pz_1*pz_1)+(0.13957*0.13957));
-        double E2 = sqrt((px_2*px_2+py_2*py_2+pz_2*pz_2)+(0.93827*0.93827));
+        double E1 = sqrt((px_1*px_1+py_1*py_1+pz_1*pz_1)+(0.93827203*0.93827203));
+        double E2 = sqrt((px_2*px_2+py_2*py_2+pz_2*pz_2)+(0.13957018*0.13957018));
         double E_tot = E1+E2;
   temp = (E_tot*E_tot) - ((px_1+px_2)*(px_1+px_2)+(py_1+py_2)*(py_1+py_2)+(pz_1+pz_2)*(pz_1+pz_2));
   return sqrt(temp);
@@ -244,8 +244,8 @@ double Mass_la(double px_1,double py_1,double pz_1,double px_2,double py_2,doubl
 {
        
   double temp = 0.0;
-        double E1 = sqrt((px_1*px_1+py_1*py_1+pz_1*pz_1)+(0.13957*0.13957));
-        double E2 = sqrt((px_2*px_2+py_2*py_2+pz_2*pz_2)+(0.13957*0.13957));
+        double E1 = sqrt((px_1*px_1+py_1*py_1+pz_1*pz_1)+(0.13957018*0.13957018));
+        double E2 = sqrt((px_2*px_2+py_2*py_2+pz_2*pz_2)+(0.13957018*0.13957018));
         double E_tot = E1+E2;
   temp = (E_tot*E_tot) - ((px_1+px_2)*(px_1+px_2)+(py_1+py_2)*(py_1+py_2)+(pz_1+pz_2)*(pz_1+pz_2));
   return sqrt(temp);
@@ -456,22 +456,27 @@ if ( nTracks > multmin_ && nTracks < multmax_ ){
             
             double dzos2 = dzbest2/dzerror2;
             double dxyos2 = dxybest2/dxyerror2;
+
+            //InvMass_ks_underlying->Fill(ks_eta,ks_pt,ks_mass);
             
-            if (dau1_Nhits > 3 && dau2_Nhits > 3 && dlos > 5 && agl > 0.999 && TMath::Abs(dzos1) > 1 && 
+            if (dau1_Nhits > 3 && dau2_Nhits > 3 && TMath::Abs(ks_eta) < 2.4 && dlos > 5 && agl > 0.999 && TMath::Abs(dzos1) > 1 && 
               TMath::Abs(dzos2) > 1 && TMath::Abs(dxyos1) > 1 && TMath::Abs(dxyos2) > 1)
             {
 
               double temp = Mass_ks(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
               double temp_e = Mass_e(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
-                if ( temp < 1.13568 && temp > 1.09568 ) continue;
-                  if ( temp_e < 0.015511) continue;
+              double temp_reverse = Mass_ks(px_dau2,py_dau2,pz_dau2,px_dau1,py_dau1,pz_dau1);
+		              if ( (temp < 1.125683 && temp > 1.105683) )continue;
+		              if ((temp_reverse < 1.125683 && temp_reverse > 1.105683)) continue;
+                  if ( temp_e < 0.015) continue;
 
                   InvMass_ks_underlying->Fill(ks_eta,ks_pt,ks_mass);
 
+                
             }
 
         }
-    
+
 
     for(unsigned it=0; it<v0candidates_la->size(); ++it){     
     
@@ -507,6 +512,7 @@ if ( nTracks > multmin_ && nTracks < multmax_ ){
             double la_pz = trk.pz();
             double la_eta = trk.eta();
             double la_phi = trk.phi();
+            double la_p = trk.p();
 
             //PAngle
             double secvz = trk.vz();
@@ -550,15 +556,17 @@ if ( nTracks > multmin_ && nTracks < multmax_ ){
             
             double dzos2 = dzbest2/dzerror2;
             double dxyos2 = dxybest2/dxyerror2;
+
+            //InvMass_la_underlying->Fill(la_eta,la_pt,la_mass);
             
-            if (dau1_Nhits > 3 && dau2_Nhits > 3 && dlos > 5 && agl > 0.999 && TMath::Abs(dzos1) > 1 && 
+            if (dau1_Nhits > 3 && dau2_Nhits > 3 && TMath::Abs(la_eta) < 2.4 && dlos > 5 && agl > 0.999 && TMath::Abs(dzos1) > 1 && 
               TMath::Abs(dzos2) > 1 && TMath::Abs(dxyos1) > 1 && TMath::Abs(dxyos2) > 1)
             {
 
               double temp = Mass_la(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
               double temp_e = Mass_e(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
-                if ( temp < 0.5076 && temp > 0.4876 ) continue;
-                  if ( temp_e < 0.015511) continue;
+		          if ( (temp < 0.517614 && temp > 0.477614) ) continue;
+                  if ( temp_e < 0.015) continue;
 
                   InvMass_la_underlying->Fill(la_eta,la_pt,la_mass);
 
@@ -580,10 +588,10 @@ V0AnalyzerHisto::beginJob()
     
   TH3D::SetDefaultSumw2();
 
-  InvMass_ks_underlying = fs->make<TH3D>("InvMass_ks_underlying",";eta;pT(GeV/c);mass(GeV/c^{2})",6,-2.4,2.4,100,0,10,360,0.44,0.56);
-  InvMass_la_underlying = fs->make<TH3D>("InvMass_la_underlying",";eta;pT(GeV/c);mass(GeV/c^{2})",6,-2.4,2.4,100,0,10,360,1.08,1.16);
-  genKS_underlying = fs->make<TH3D>("genKS_underlying",";eta;pT(GeV/c);mass(GeV/c^{2})",6,-2.4,2.4,100,0,10,360,0.44,0.56);
-  genLA_underlying = fs->make<TH3D>("genLA_underlying",";eta;pT(GeV/c);mass(GeV/c^{2})",6,-2.4,2.4,100,0,10,360,1.08,1.16);
+  InvMass_ks_underlying = fs->make<TH3D>("InvMass_ks_underlying",";eta;pT(GeV/c);mass(GeV/c^{2})",6,-2.4,2.4,120,0,12,360,0.44,0.56);
+  InvMass_la_underlying = fs->make<TH3D>("InvMass_la_underlying",";eta;pT(GeV/c);mass(GeV/c^{2})",6,-2.4,2.4,120,0,12,360,1.08,1.16);
+  genKS_underlying = fs->make<TH3D>("genKS_underlying",";eta;pT(GeV/c);mass(GeV/c^{2})",6,-2.4,2.4,120,0,12,360,0.44,0.56);
+  genLA_underlying = fs->make<TH3D>("genLA_underlying",";eta;pT(GeV/c);mass(GeV/c^{2})",6,-2.4,2.4,120,0,12,360,1.08,1.16);
 }
 
 // ------------ method called once each job just after ending the event loop  ------------

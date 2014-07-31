@@ -182,6 +182,9 @@ private:
   TH3D* InvMass_ks_underlying;
   TH3D* InvMass_la_underlying;
 
+  TH1D* test_ks;
+  TH1D* test_la;
+
   TH3D* genKS_underlying;
   TH3D* genLA_underlying;
 
@@ -328,6 +331,8 @@ V0AnalyzerHisto::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
         int id = genCand.pdgId();
         int status = genCand.status();
 
+      if ( TMath::Abs(genCand.eta()) > 2.4 ) continue;
+
       if ( status == 1 ){
 
         if( id == 310 ){
@@ -377,7 +382,7 @@ V0AnalyzerHisto::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
 
 //multiplicity bins:
 
-if ( nTracks > multmin_ && nTracks < multmax_ ){
+if ( true ){
 
     for(unsigned it=0; it<v0candidates_ks->size(); ++it){     
     
@@ -458,8 +463,9 @@ if ( nTracks > multmin_ && nTracks < multmax_ ){
             double dxyos2 = dxybest2/dxyerror2;
 
             //InvMass_ks_underlying->Fill(ks_eta,ks_pt,ks_mass);
+            test_ks->Fill(ks_mass);
             
-            if (dau1_Nhits > 3 && dau2_Nhits > 3 && TMath::Abs(ks_eta) < 2.4 && dlos > 5 && agl > 0.999 && TMath::Abs(dzos1) > 1 && 
+            /*if (dau1_Nhits > 3 && dau2_Nhits > 3 && TMath::Abs(ks_eta) < 2.4 && dlos > 5 && agl > 0.999 && TMath::Abs(dzos1) > 1 && 
               TMath::Abs(dzos2) > 1 && TMath::Abs(dxyos1) > 1 && TMath::Abs(dxyos2) > 1)
             {
 
@@ -470,10 +476,12 @@ if ( nTracks > multmin_ && nTracks < multmax_ ){
 		              if ((temp_reverse < 1.125683 && temp_reverse > 1.105683)) continue;
                   if ( temp_e < 0.015) continue;
 
+                  test_ks->Fill(ks_mass);
+
                   InvMass_ks_underlying->Fill(ks_eta,ks_pt,ks_mass);
 
                 
-            }
+            }*/
 
         }
 
@@ -558,8 +566,9 @@ if ( nTracks > multmin_ && nTracks < multmax_ ){
             double dxyos2 = dxybest2/dxyerror2;
 
             //InvMass_la_underlying->Fill(la_eta,la_pt,la_mass);
+            test_la->Fill(la_mass);
             
-            if (dau1_Nhits > 3 && dau2_Nhits > 3 && TMath::Abs(la_eta) < 2.4 && dlos > 5 && agl > 0.999 && TMath::Abs(dzos1) > 1 && 
+            /*if (dau1_Nhits > 3 && dau2_Nhits > 3 && TMath::Abs(la_eta) < 2.4 && dlos > 5 && agl > 0.999 && TMath::Abs(dzos1) > 1 && 
               TMath::Abs(dzos2) > 1 && TMath::Abs(dxyos1) > 1 && TMath::Abs(dxyos2) > 1)
             {
 
@@ -568,13 +577,13 @@ if ( nTracks > multmin_ && nTracks < multmax_ ){
 		          if ( (temp < 0.517614 && temp > 0.477614) ) continue;
                   if ( temp_e < 0.015) continue;
 
+                  test_la->Fill(la_mass);
+
                   InvMass_la_underlying->Fill(la_eta,la_pt,la_mass);
 
-            }
+            }*/
 
         }  
-
-
 
   }
 
@@ -592,6 +601,9 @@ V0AnalyzerHisto::beginJob()
   InvMass_la_underlying = fs->make<TH3D>("InvMass_la_underlying",";eta;pT(GeV/c);mass(GeV/c^{2})",6,-2.4,2.4,120,0,12,360,1.08,1.16);
   genKS_underlying = fs->make<TH3D>("genKS_underlying",";eta;pT(GeV/c);mass(GeV/c^{2})",6,-2.4,2.4,120,0,12,360,0.44,0.56);
   genLA_underlying = fs->make<TH3D>("genLA_underlying",";eta;pT(GeV/c);mass(GeV/c^{2})",6,-2.4,2.4,120,0,12,360,1.08,1.16);
+
+  test_ks = fs->make<TH1D>("test_ks",";mass",1000,0,100);
+  test_la = fs->make<TH1D>("test_la",";mass",1000,0,100);
 }
 
 // ------------ method called once each job just after ending the event loop  ------------

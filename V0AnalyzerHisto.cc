@@ -171,6 +171,7 @@ private:
   edm::InputTag simVertexSrc_;
   edm::InputTag generalV0_ks_;
   edm::InputTag generalV0_la_;
+  edm::InputTag generalV0_xi_;
   edm::InputTag genParticleSrc_;
   std::string vertexSrc_;
   std::string jetSrc_;
@@ -182,11 +183,12 @@ private:
   TH3D* InvMass_ks_underlying;
   TH3D* InvMass_la_underlying;
 
-  TH1D* test_ks;
-  TH1D* test_la;
+  TH1D* XiDaughter;
 
   TH3D* genKS_underlying;
   TH3D* genLA_underlying;
+
+  TH1D* vertexDistZ;
 
 };
 
@@ -210,6 +212,8 @@ V0AnalyzerHisto::V0AnalyzerHisto(const edm::ParameterSet& iConfig)
   simVertexSrc_ =  iConfig.getUntrackedParameter<edm::InputTag>("tpVtxSrc",edm::InputTag("mergedtruth","MergedTrackTruth"));
   generalV0_ks_ = iConfig.getParameter<edm::InputTag>("generalV0_ks");
   generalV0_la_ = iConfig.getParameter<edm::InputTag>("generalV0_la");
+  generalV0_xi_ = iConfig.getParameter<edm::InputTag>("generalV0_xi");
+
   jetSrc_ = iConfig.getParameter<std::string>("jetSrc");
   genParticleSrc_ = iConfig.getParameter<edm::InputTag>("genParticleSrc");
   multmin_ = iConfig.getUntrackedParameter<int>("multmin", 120);
@@ -290,6 +294,13 @@ V0AnalyzerHisto::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
   const reco::Vertex & vtx = (*vertices)[0];
   bestvz = vtx.z(); bestvx = vtx.x(); bestvy = vtx.y();
   bestvzError = vtx.zError(); bestvxError = vtx.xError(); bestvyError = vtx.yError();
+
+
+  vertexDistZ->Fill( vtx.z() );
+  
+
+  //first selection; vertices
+    if(bestvz < -15.0 || bestvz>15.0) return;
 
   Handle<reco::TrackCollection> tracks;
   iEvent.getByLabel(trackSrc_, tracks);
@@ -376,13 +387,15 @@ V0AnalyzerHisto::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
   edm::Handle<reco::VertexCompositeCandidateCollection> v0candidates_la;
     iEvent.getByLabel(generalV0_la_,v0candidates_la);
     if(!v0candidates_la.isValid()) return;
+
+  edm::Handle<reco::VertexCompositeCandidateCollection> v0candidates_xi;
+    iEvent.getByLabel(generalV0_xi_,v0candidates_xi);
+    if(!v0candidates_xi.isValid()) return;
  
-//first selection; vertices
-    if(bestvz < -15.0 || bestvz>15.0) return;
 
 //multiplicity bins:
 
-if ( true ){
+if ( nTracks > multmin_ && nTracks < multmax_ ){
 
     for(unsigned it=0; it<v0candidates_ks->size(); ++it){     
     
@@ -462,8 +475,7 @@ if ( true ){
             double dzos2 = dzbest2/dzerror2;
             double dxyos2 = dxybest2/dxyerror2;
 
-            //InvMass_ks_underlying->Fill(ks_eta,ks_pt,ks_mass);
-            test_ks->Fill(ks_mass);
+            InvMass_ks_underlying->Fill(ks_eta,ks_pt,ks_mass);
             
             /*if (dau1_Nhits > 3 && dau2_Nhits > 3 && TMath::Abs(ks_eta) < 2.4 && dlos > 5 && agl > 0.999 && TMath::Abs(dzos1) > 1 && 
               TMath::Abs(dzos2) > 1 && TMath::Abs(dxyos1) > 1 && TMath::Abs(dxyos2) > 1)
@@ -565,8 +577,26 @@ if ( true ){
             double dzos2 = dzbest2/dzerror2;
             double dxyos2 = dxybest2/dxyerror2;
 
-            //InvMass_la_underlying->Fill(la_eta,la_pt,la_mass);
-            test_la->Fill(la_mass);
+            for(unsigned it=0; it<v0candidates_xi->size(); ++it){
+
+                const reco::VertexCompositeCandidate & trk = (*v0candidates_xi)[it];
+                const reco:: Candidate * d1 = trk.daughter(0);
+                const reco:: Candidate * d2 = trk.daughter(1);
+
+                double mass = d1->mass();
+                  
+                  if ( mass = la_mass ){
+
+                      if ( trk.mass() > 1.30486 && trk.mass() < 1.32486 ){
+
+                          XiDaughter->Fill( la_mass );
+                      }
+                  }
+
+            }
+
+            InvMass_la_underlying->Fill(la_eta,la_pt,la_mass);
+            
             
             /*if (dau1_Nhits > 3 && dau2_Nhits > 3 && TMath::Abs(la_eta) < 2.4 && dlos > 5 && agl > 0.999 && TMath::Abs(dzos1) > 1 && 
               TMath::Abs(dzos2) > 1 && TMath::Abs(dxyos1) > 1 && TMath::Abs(dxyos2) > 1)
@@ -602,8 +632,8 @@ V0AnalyzerHisto::beginJob()
   genKS_underlying = fs->make<TH3D>("genKS_underlying",";eta;pT(GeV/c);mass(GeV/c^{2})",6,-2.4,2.4,120,0,12,360,0.44,0.56);
   genLA_underlying = fs->make<TH3D>("genLA_underlying",";eta;pT(GeV/c);mass(GeV/c^{2})",6,-2.4,2.4,120,0,12,360,1.08,1.16);
 
-  test_ks = fs->make<TH1D>("test_ks",";mass",1000,0,100);
-  test_la = fs->make<TH1D>("test_la",";mass",1000,0,100);
+  XiDaughter = fs->make<TH1D>("XiDaughter",";mass(GeV/c^{2});#Events",360,108,1.16);
+  vertexDistZ = fs->make<TH1D>("vertexDistZ",";Vz;#Events",100,-15,15);
 }
 
 // ------------ method called once each job just after ending the event loop  ------------

@@ -406,23 +406,23 @@ if ( nTracks > multmin_ && nTracks < multmax_ ){
             auto dau1 = d1->get<reco::TrackRef>();
             auto dau2 = d2->get<reco::TrackRef>();
      
-            double eta_dau1 = dau1->eta();
-            double phi_dau1 = dau1->phi();
-            double pt_dau1 = dau1->pt();
-            double px_dau1 = dau1->px();
-            double py_dau1 = dau1->py();
-            double pz_dau1 = dau1->pz();
-            double charge_dau1 = dau1->charge();  
-            double p_dau1 = dau1->p();        
+            double eta_dau1 = d1->eta();
+            double phi_dau1 = d1->phi();
+            double pt_dau1 = d1->pt();
+            double px_dau1 = d1->px();
+            double py_dau1 = d1->py();
+            double pz_dau1 = d1->pz();
+            double charge_dau1 = d1->charge();  
+            double p_dau1 = d1->p();        
 
-            double eta_dau2 = dau2->eta();
-            double phi_dau2 = dau2->phi();
-            double pt_dau2 = dau2->pt();
-            double px_dau2 = dau2->px();
-            double py_dau2 = dau2->py();
-            double pz_dau2 = dau2->pz();    
-            double charge_dau2 = dau2->charge();
-            double p_dau2 = dau2->p();
+            double eta_dau2 = d2->eta();
+            double phi_dau2 = d2->phi();
+            double pt_dau2 = d2->pt();
+            double px_dau2 = d2->px();
+            double py_dau2 = d2->py();
+            double pz_dau2 = d2->pz();    
+            double charge_dau2 = d2->charge();
+            double p_dau2 = d2->p();
 
             double ks_mass = trk.mass();
             double ks_pt = trk.pt();
@@ -475,25 +475,23 @@ if ( nTracks > multmin_ && nTracks < multmax_ ){
             double dzos2 = dzbest2/dzerror2;
             double dxyos2 = dxybest2/dxyerror2;
 
-            InvMass_ks_underlying->Fill(ks_eta,ks_pt,ks_mass);
+            //InvMass_ks_underlying->Fill(ks_eta,ks_pt,ks_mass);
             
-            /*if (dau1_Nhits > 3 && dau2_Nhits > 3 && TMath::Abs(ks_eta) < 2.4 && dlos > 5 && agl > 0.999 && TMath::Abs(dzos1) > 1 && 
+            if (dau1_Nhits > 3 && dau2_Nhits > 3 && TMath::Abs(ks_eta) < 2.4 && dlos > 5 && agl > 0.999 && TMath::Abs(dzos1) > 1 && 
               TMath::Abs(dzos2) > 1 && TMath::Abs(dxyos1) > 1 && TMath::Abs(dxyos2) > 1)
             {
 
               double temp = Mass_ks(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
               double temp_e = Mass_e(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
               double temp_reverse = Mass_ks(px_dau2,py_dau2,pz_dau2,px_dau1,py_dau1,pz_dau1);
-		              if ( (temp < 1.125683 && temp > 1.105683) )continue;
-		              if ((temp_reverse < 1.125683 && temp_reverse > 1.105683)) continue;
+                  if ( (temp < 1.125683 && temp > 1.105683) )continue;
+                  if ((temp_reverse < 1.125683 && temp_reverse > 1.105683)) continue;
                   if ( temp_e < 0.015) continue;
-
-                  test_ks->Fill(ks_mass);
 
                   InvMass_ks_underlying->Fill(ks_eta,ks_pt,ks_mass);
 
                 
-            }*/
+            }
 
         }
 
@@ -507,23 +505,23 @@ if ( nTracks > multmin_ && nTracks < multmax_ ){
             auto dau1 = d1->get<reco::TrackRef>();
             auto dau2 = d2->get<reco::TrackRef>();
      
-            double eta_dau1 = dau1->eta();
-            double phi_dau1 = dau1->phi();
-            double pt_dau1 = dau1->pt();
-            double px_dau1 = dau1->px();
-            double py_dau1 = dau1->py();
-            double pz_dau1 = dau1->pz();
-            double charge_dau1 = dau1->charge();  
-            double p_dau1 = dau1->p();        
+            double eta_dau1 = d1->eta();
+            double phi_dau1 = d1->phi();
+            double pt_dau1 = d1->pt();
+            double px_dau1 = d1->px();
+            double py_dau1 = d1->py();
+            double pz_dau1 = d1->pz();
+            double charge_dau1 = d1->charge();  
+            double p_dau1 = d1->p();        
 
-            double eta_dau2 = dau2->eta();
-            double phi_dau2 = dau2->phi();
-            double pt_dau2 = dau2->pt();
-            double px_dau2 = dau2->px();
-            double py_dau2 = dau2->py();
-            double pz_dau2 = dau2->pz();    
-            double charge_dau2 = dau2->charge();
-            double p_dau2 = dau2->p();
+            double eta_dau2 = d2->eta();
+            double phi_dau2 = d2->phi();
+            double pt_dau2 = d2->pt();
+            double px_dau2 = d2->px();
+            double py_dau2 = d2->py();
+            double pz_dau2 = d2->pz();    
+            double charge_dau2 = d2->charge();
+            double p_dau2 = d2->p();
 
             double la_mass = trk.mass();
             double la_pt = trk.pt();
@@ -583,35 +581,45 @@ if ( nTracks > multmin_ && nTracks < multmax_ ){
                 const reco:: Candidate * d1 = trk.daughter(0);
                 const reco:: Candidate * d2 = trk.daughter(1);
 
+                //PAngle
+                double secvz = trk.vz();
+                double secvx = trk.vx();
+                double secvy = trk.vy();
+                TVector3 ptosvec(secvx-bestvx,secvy-bestvy,secvz-bestvz);
+                TVector3 secvec(trk.px(),trk.py(),trk.pz());
+
+                double agl = cos(secvec.Angle(ptosvec));
+
                 double mass = d1->mass();
                   
                   if ( mass = la_mass ){
+
+                    if ( agl > 0.999 ){
 
                       if ( trk.mass() > 1.30486 && trk.mass() < 1.32486 ){
 
                           XiDaughter->Fill( la_mass );
                       }
+                    }
                   }
 
             }
 
-            InvMass_la_underlying->Fill(la_eta,la_pt,la_mass);
+            //InvMass_la_underlying->Fill(la_eta,la_pt,la_mass);
             
             
-            /*if (dau1_Nhits > 3 && dau2_Nhits > 3 && TMath::Abs(la_eta) < 2.4 && dlos > 5 && agl > 0.999 && TMath::Abs(dzos1) > 1 && 
+            if (dau1_Nhits > 3 && dau2_Nhits > 3 && TMath::Abs(la_eta) < 2.4 && dlos > 5 && agl > 0.999 && TMath::Abs(dzos1) > 1 && 
               TMath::Abs(dzos2) > 1 && TMath::Abs(dxyos1) > 1 && TMath::Abs(dxyos2) > 1)
             {
 
               double temp = Mass_la(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
               double temp_e = Mass_e(px_dau1,py_dau1,pz_dau1,px_dau2,py_dau2,pz_dau2);
-		          if ( (temp < 0.517614 && temp > 0.477614) ) continue;
+              if ( (temp < 0.517614 && temp > 0.477614) ) continue;
                   if ( temp_e < 0.015) continue;
-
-                  test_la->Fill(la_mass);
 
                   InvMass_la_underlying->Fill(la_eta,la_pt,la_mass);
 
-            }*/
+            }
 
         }  
 

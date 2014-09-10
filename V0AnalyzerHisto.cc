@@ -183,12 +183,15 @@ private:
   TH3D* InvMass_ks_underlying;
   TH3D* InvMass_la_underlying;
 
-  TH1D* XiDaughter;
+  TH3D* XiDaughter;
 
   TH3D* genKS_underlying;
   TH3D* genLA_underlying;
 
   TH1D* vertexDistZ;
+  TH1D* xiMass;
+
+  TH1D* multiDist;
 
 };
 
@@ -392,8 +395,14 @@ V0AnalyzerHisto::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
     iEvent.getByLabel(generalV0_xi_,v0candidates_xi);
     if(!v0candidates_xi.isValid()) return;
  
+/*
+Filling multiplicity into 1D histogram:
+ */
+
+multiDist->Fill( nTracks );
 
 //multiplicity bins:
+//
 
 if ( nTracks > multmin_ && nTracks < multmax_ ){
 
@@ -475,9 +484,9 @@ if ( nTracks > multmin_ && nTracks < multmax_ ){
             double dzos2 = dzbest2/dzerror2;
             double dxyos2 = dxybest2/dxyerror2;
 
-            //InvMass_ks_underlying->Fill(ks_eta,ks_pt,ks_mass);
+            InvMass_ks_underlying->Fill(ks_eta,ks_pt,ks_mass);
             
-            if (dau1_Nhits > 3 && dau2_Nhits > 3 && TMath::Abs(ks_eta) < 2.4 && dlos > 5 && agl > 0.999 && TMath::Abs(dzos1) > 1 && 
+            /*if (dau1_Nhits > 3 && dau2_Nhits > 3 && TMath::Abs(ks_eta) < 2.4 && dlos > 5 && agl > 0.999 && TMath::Abs(dzos1) > 1 && 
               TMath::Abs(dzos2) > 1 && TMath::Abs(dxyos1) > 1 && TMath::Abs(dxyos2) > 1)
             {
 
@@ -491,7 +500,7 @@ if ( nTracks > multmin_ && nTracks < multmax_ ){
                   InvMass_ks_underlying->Fill(ks_eta,ks_pt,ks_mass);
 
                 
-            }
+            }*/
 
         }
 
@@ -591,24 +600,28 @@ if ( nTracks > multmin_ && nTracks < multmax_ ){
                 double agl = cos(secvec.Angle(ptosvec));
 
                 double mass = d1->mass();
+                double pt1 = d1->pt();
                   
-                  if ( mass = la_mass ){
+                  if ( mass == la_mass && pt1 == la_pt ){
 
                     if ( agl > 0.999 ){
 
-                      if ( trk.mass() > 1.30486 && trk.mass() < 1.32486 ){
+                      xiMass->Fill( trk.mass() );
 
-                          XiDaughter->Fill( la_mass );
+                      if ( trk.mass() > 1.31486 && trk.mass() < 1.33486 ){
+
+                          XiDaughter->Fill(la_eta,la_pt,la_mass);
+                          
                       }
                     }
                   }
 
             }
 
-            //InvMass_la_underlying->Fill(la_eta,la_pt,la_mass);
+            InvMass_la_underlying->Fill(la_eta,la_pt,la_mass);
             
             
-            if (dau1_Nhits > 3 && dau2_Nhits > 3 && TMath::Abs(la_eta) < 2.4 && dlos > 5 && agl > 0.999 && TMath::Abs(dzos1) > 1 && 
+            /*if (dau1_Nhits > 3 && dau2_Nhits > 3 && TMath::Abs(la_eta) < 2.4 && dlos > 5 && agl > 0.999 && TMath::Abs(dzos1) > 1 && 
               TMath::Abs(dzos2) > 1 && TMath::Abs(dxyos1) > 1 && TMath::Abs(dxyos2) > 1)
             {
 
@@ -619,7 +632,7 @@ if ( nTracks > multmin_ && nTracks < multmax_ ){
 
                   InvMass_la_underlying->Fill(la_eta,la_pt,la_mass);
 
-            }
+            }*/
 
         }  
 
@@ -640,8 +653,12 @@ V0AnalyzerHisto::beginJob()
   genKS_underlying = fs->make<TH3D>("genKS_underlying",";eta;pT(GeV/c);mass(GeV/c^{2})",6,-2.4,2.4,120,0,12,360,0.44,0.56);
   genLA_underlying = fs->make<TH3D>("genLA_underlying",";eta;pT(GeV/c);mass(GeV/c^{2})",6,-2.4,2.4,120,0,12,360,1.08,1.16);
 
-  XiDaughter = fs->make<TH1D>("XiDaughter",";mass(GeV/c^{2});#Events",360,108,1.16);
+  XiDaughter = fs->make<TH3D>("XiDaughter",";eta;pT(GeV/c);mass(GeV/c^{2})",6,-2.4,2.4,120,0,12,360,1.08,1.16);
+
   vertexDistZ = fs->make<TH1D>("vertexDistZ",";Vz;#Events",100,-15,15);
+  multiDist = fs->make<TH1D>("multiDist",";mult;#Events",300,0,300);
+  xiMass = fs->make<TH1D>("xiMass",";mass",360,1.28,1.36);
+
 }
 
 // ------------ method called once each job just after ending the event loop  ------------

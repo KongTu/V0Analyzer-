@@ -191,7 +191,11 @@ private:
   TH1D* vertexDistZ;
   TH1D* xiMass;
 
+  TH2D* ks_ptRapidity;
+  TH2D* la_ptRapidity;
+
   TH1D* multiDist;
+
 
 };
 
@@ -440,6 +444,7 @@ if ( nTracks > multmin_ && nTracks < multmax_ ){
             double ks_pz = trk.pz();
             double ks_eta = trk.eta();
             double ks_phi = trk.phi();
+            double ks_y = trk.rapidity();
 
             //PAngle
             double secvz = trk.vz();
@@ -484,9 +489,13 @@ if ( nTracks > multmin_ && nTracks < multmax_ ){
             double dzos2 = dzbest2/dzerror2;
             double dxyos2 = dxybest2/dxyerror2;
 
-            InvMass_ks_underlying->Fill(ks_eta,ks_pt,ks_mass);
+            ks_y = ks_y + 0.47;
+
+            ks_ptRapidity->Fill(ks_y,ks_pt);
+
+            //InvMass_ks_underlying->Fill(ks_eta,ks_pt,ks_mass);
             
-            /*if (dau1_Nhits > 3 && dau2_Nhits > 3 && TMath::Abs(ks_eta) < 2.4 && dlos > 5 && agl > 0.999 && TMath::Abs(dzos1) > 1 && 
+            if (dau1_Nhits > 3 && dau2_Nhits > 3 && ks_y > -1.93 && ks_y < 2.87 && dlos > 5 && agl > 0.999 && TMath::Abs(dzos1) > 1 && 
               TMath::Abs(dzos2) > 1 && TMath::Abs(dxyos1) > 1 && TMath::Abs(dxyos2) > 1)
             {
 
@@ -497,10 +506,10 @@ if ( nTracks > multmin_ && nTracks < multmax_ ){
                   if ((temp_reverse < 1.125683 && temp_reverse > 1.105683)) continue;
                   if ( temp_e < 0.015) continue;
 
-                  InvMass_ks_underlying->Fill(ks_eta,ks_pt,ks_mass);
+                  InvMass_ks_underlying->Fill(ks_y,ks_pt,ks_mass);
 
                 
-            }*/
+            }
 
         }
 
@@ -540,6 +549,7 @@ if ( nTracks > multmin_ && nTracks < multmax_ ){
             double la_eta = trk.eta();
             double la_phi = trk.phi();
             double la_p = trk.p();
+            double la_y = trk.rapidity();
 
             //PAngle
             double secvz = trk.vz();
@@ -584,44 +594,14 @@ if ( nTracks > multmin_ && nTracks < multmax_ ){
             double dzos2 = dzbest2/dzerror2;
             double dxyos2 = dxybest2/dxyerror2;
 
-            for(unsigned it=0; it<v0candidates_xi->size(); ++it){
+            la_y = la_y + 0.47;
 
-                const reco::VertexCompositeCandidate & trk = (*v0candidates_xi)[it];
-                const reco:: Candidate * d1 = trk.daughter(0);
-                const reco:: Candidate * d2 = trk.daughter(1);
+            la_ptRapidity->Fill(la_y,la_pt);
 
-                //PAngle
-                double secvz = trk.vz();
-                double secvx = trk.vx();
-                double secvy = trk.vy();
-                TVector3 ptosvec(secvx-bestvx,secvy-bestvy,secvz-bestvz);
-                TVector3 secvec(trk.px(),trk.py(),trk.pz());
+            //InvMass_la_underlying->Fill(la_eta,la_pt,la_mass);
 
-                double agl = cos(secvec.Angle(ptosvec));
-
-                double mass = d1->mass();
-                double pt1 = d1->pt();
-                  
-                  if ( mass == la_mass && pt1 == la_pt ){
-
-                    if ( agl > 0.999 ){
-
-                      xiMass->Fill( trk.mass() );
-
-                      if ( trk.mass() > 1.31486 && trk.mass() < 1.33486 ){
-
-                          XiDaughter->Fill(la_eta,la_pt,la_mass);
-                          
-                      }
-                    }
-                  }
-
-            }
-
-            InvMass_la_underlying->Fill(la_eta,la_pt,la_mass);
             
-            
-            /*if (dau1_Nhits > 3 && dau2_Nhits > 3 && TMath::Abs(la_eta) < 2.4 && dlos > 5 && agl > 0.999 && TMath::Abs(dzos1) > 1 && 
+            if (dau1_Nhits > 3 && dau2_Nhits > 3 && la_y > -1.93 && la_y < 2.87 && dlos > 5 && agl > 0.999 && TMath::Abs(dzos1) > 1 && 
               TMath::Abs(dzos2) > 1 && TMath::Abs(dxyos1) > 1 && TMath::Abs(dxyos2) > 1)
             {
 
@@ -630,9 +610,44 @@ if ( nTracks > multmin_ && nTracks < multmax_ ){
               if ( (temp < 0.517614 && temp > 0.477614) ) continue;
                   if ( temp_e < 0.015) continue;
 
-                  InvMass_la_underlying->Fill(la_eta,la_pt,la_mass);
+                  InvMass_la_underlying->Fill(la_y,la_pt,la_mass);
 
-            }*/
+                  for(unsigned it=0; it<v0candidates_xi->size(); ++it){
+
+                    const reco::VertexCompositeCandidate & trk = (*v0candidates_xi)[it];
+                    const reco:: Candidate * d1 = trk.daughter(0);
+                    const reco:: Candidate * d2 = trk.daughter(1);
+
+                    //PAngle
+                    double secvz = trk.vz();
+                    double secvx = trk.vx();
+                    double secvy = trk.vy();
+                    TVector3 ptosvec(secvx-bestvx,secvy-bestvy,secvz-bestvz);
+                    TVector3 secvec(trk.px(),trk.py(),trk.pz());
+
+                    double agl = cos(secvec.Angle(ptosvec));
+
+                    double mass = d1->mass();
+                    double pt1 = d1->pt();
+
+                    if ( mass == la_mass && pt1 == la_pt ){
+
+                      if ( agl > 0.999 ){
+
+                        xiMass->Fill( trk.mass() );
+
+                          if ( trk.mass() > 1.31486 && trk.mass() < 1.33486 ){
+
+                            XiDaughter->Fill(la_y,la_pt,la_mass);
+
+                    }
+                      }
+                          }
+
+                  }
+
+            }
+
 
         }  
 
@@ -648,16 +663,19 @@ V0AnalyzerHisto::beginJob()
     
   TH3D::SetDefaultSumw2();
 
-  InvMass_ks_underlying = fs->make<TH3D>("InvMass_ks_underlying",";eta;pT(GeV/c);mass(GeV/c^{2})",6,-2.4,2.4,120,0,12,360,0.44,0.56);
-  InvMass_la_underlying = fs->make<TH3D>("InvMass_la_underlying",";eta;pT(GeV/c);mass(GeV/c^{2})",6,-2.4,2.4,120,0,12,360,1.08,1.16);
-  genKS_underlying = fs->make<TH3D>("genKS_underlying",";eta;pT(GeV/c);mass(GeV/c^{2})",6,-2.4,2.4,120,0,12,360,0.44,0.56);
-  genLA_underlying = fs->make<TH3D>("genLA_underlying",";eta;pT(GeV/c);mass(GeV/c^{2})",6,-2.4,2.4,120,0,12,360,1.08,1.16);
+  InvMass_ks_underlying = fs->make<TH3D>("InvMass_ks_underlying",";eta;pT(GeV/c);mass(GeV/c^{2})",350,-2.5,3.5,120,0,12,360,0.44,0.56);
+  InvMass_la_underlying = fs->make<TH3D>("InvMass_la_underlying",";eta;pT(GeV/c);mass(GeV/c^{2})",350,-2.5,3.5,120,0,12,360,1.08,1.16);
+  genKS_underlying = fs->make<TH3D>("genKS_underlying",";eta;pT(GeV/c);mass(GeV/c^{2})",350,-2.5,3.5,120,0,12,360,0.44,0.56);
+  genLA_underlying = fs->make<TH3D>("genLA_underlying",";eta;pT(GeV/c);mass(GeV/c^{2})",350,-2.5,3.5,120,0,12,360,1.08,1.16);
 
-  XiDaughter = fs->make<TH3D>("XiDaughter",";eta;pT(GeV/c);mass(GeV/c^{2})",6,-2.4,2.4,120,0,12,360,1.08,1.16);
+  XiDaughter = fs->make<TH3D>("XiDaughter",";eta;pT(GeV/c);mass(GeV/c^{2})",350,-2.5,3.5,120,0,12,360,1.08,1.16);
 
   vertexDistZ = fs->make<TH1D>("vertexDistZ",";Vz;#Events",100,-15,15);
   multiDist = fs->make<TH1D>("multiDist",";mult;#Events",300,0,300);
   xiMass = fs->make<TH1D>("xiMass",";mass",360,1.28,1.36);
+  ks_ptRapidity = fs->make<TH2D>("ks_ptRapidity",";rapidity;pT(GeV/c)",350,-2.5,3.5,120,0,12);
+  la_ptRapidity = fs->make<TH2D>("la_ptRapidity",";rapidity;pT(GeV/c)",350,-2.5,3.5,120,0,12);
+
 
 }
 

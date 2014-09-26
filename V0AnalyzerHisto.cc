@@ -195,6 +195,7 @@ private:
   TH2D* la_ptRapidity;
 
   TH1D* multiDist;
+  TH1D* etaDist;
 
 
 };
@@ -334,6 +335,8 @@ V0AnalyzerHisto::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
 
         if ( fabs(trk.eta()) > 2.4 || trk.pt() < 0.4  ) continue;
 
+        etaDist->Fill( trk.eta() );
+
         nTracks++;
         
   } 
@@ -348,14 +351,15 @@ V0AnalyzerHisto::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
         const reco::GenParticle & genCand = (*genParticleCollection)[it];
         int id = genCand.pdgId();
         int status = genCand.status();
+        double rpy_cm = genCand.rapidity()-0.47;
 
-      if ( TMath::Abs(genCand.eta()) > 2.4 ) continue;
+      if ( rpy_cm < -2.87 || rpy_cm > 1.93 ) continue;
 
       if ( status == 1 ){
 
         if( id == 310 ){
 
-            genKS_underlying->Fill(genCand.eta(), genCand.pt(), genCand.mass());
+            genKS_underlying->Fill(rpy_cm, genCand.pt(), genCand.mass());
         }
 
     //Finding mother:
@@ -374,7 +378,7 @@ V0AnalyzerHisto::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
 
           if (TMath::Abs(mid) != 3322 && TMath::Abs(mid) != 3312 && TMath::Abs(mid) != 3324 && TMath::Abs(mid) != 3314 && TMath::Abs(mid) != 3334){
 
-            genLA_underlying->Fill( genCand.eta(), genCand.pt(), genCand.mass() );
+            genLA_underlying->Fill( rpy_cm, genCand.pt(), genCand.mass() );
           }
         }
      
@@ -489,13 +493,13 @@ if ( nTracks > multmin_ && nTracks < multmax_ ){
             double dzos2 = dzbest2/dzerror2;
             double dxyos2 = dxybest2/dxyerror2;
 
-            ks_y = ks_y + 0.47;
+            ks_y = -ks_y - 0.47;
 
             ks_ptRapidity->Fill(ks_y,ks_pt);
 
             //InvMass_ks_underlying->Fill(ks_eta,ks_pt,ks_mass);
             
-            if (dau1_Nhits > 3 && dau2_Nhits > 3 && ks_y > -1.93 && ks_y < 2.87 && dlos > 5 && agl > 0.999 && TMath::Abs(dzos1) > 1 && 
+            if (dau1_Nhits > 3 && dau2_Nhits > 3 && ks_y > -2.87 && ks_y < 1.93 && dlos > 5 && agl > 0.999 && TMath::Abs(dzos1) > 1 && 
               TMath::Abs(dzos2) > 1 && TMath::Abs(dxyos1) > 1 && TMath::Abs(dxyos2) > 1)
             {
 
@@ -594,14 +598,14 @@ if ( nTracks > multmin_ && nTracks < multmax_ ){
             double dzos2 = dzbest2/dzerror2;
             double dxyos2 = dxybest2/dxyerror2;
 
-            la_y = la_y + 0.47;
+            la_y = -la_y - 0.47;
 
             la_ptRapidity->Fill(la_y,la_pt);
 
             //InvMass_la_underlying->Fill(la_eta,la_pt,la_mass);
 
             
-            if (dau1_Nhits > 3 && dau2_Nhits > 3 && la_y > -1.93 && la_y < 2.87 && dlos > 5 && agl > 0.999 && TMath::Abs(dzos1) > 1 && 
+            if (dau1_Nhits > 3 && dau2_Nhits > 3 && la_y > -2.87 && la_y < 1.93 && dlos > 5 && agl > 0.999 && TMath::Abs(dzos1) > 1 && 
               TMath::Abs(dzos2) > 1 && TMath::Abs(dxyos1) > 1 && TMath::Abs(dxyos2) > 1)
             {
 
@@ -663,18 +667,24 @@ V0AnalyzerHisto::beginJob()
     
   TH3D::SetDefaultSumw2();
 
-  InvMass_ks_underlying = fs->make<TH3D>("InvMass_ks_underlying",";eta;pT(GeV/c);mass(GeV/c^{2})",350,-2.5,3.5,120,0,12,360,0.44,0.56);
-  InvMass_la_underlying = fs->make<TH3D>("InvMass_la_underlying",";eta;pT(GeV/c);mass(GeV/c^{2})",350,-2.5,3.5,120,0,12,360,1.08,1.16);
-  genKS_underlying = fs->make<TH3D>("genKS_underlying",";eta;pT(GeV/c);mass(GeV/c^{2})",350,-2.5,3.5,120,0,12,360,0.44,0.56);
-  genLA_underlying = fs->make<TH3D>("genLA_underlying",";eta;pT(GeV/c);mass(GeV/c^{2})",350,-2.5,3.5,120,0,12,360,1.08,1.16);
+  InvMass_ks_underlying = fs->make<TH3D>("InvMass_ks_underlying",";eta;pT(GeV/c);mass(GeV/c^{2})",700,-3.5,3.5,120,0,12,360,0.44,0.56);
+  InvMass_la_underlying = fs->make<TH3D>("InvMass_la_underlying",";eta;pT(GeV/c);mass(GeV/c^{2})",700,-3.5,3.5,120,0,12,360,1.08,1.16);
+  
+  if(doGenParticle_){
 
-  XiDaughter = fs->make<TH3D>("XiDaughter",";eta;pT(GeV/c);mass(GeV/c^{2})",350,-2.5,3.5,120,0,12,360,1.08,1.16);
+    genKS_underlying = fs->make<TH3D>("genKS_underlying",";eta;pT(GeV/c);mass(GeV/c^{2})",700,-3.5,3.5,120,0,12,360,0.44,0.56);
+    genLA_underlying = fs->make<TH3D>("genLA_underlying",";eta;pT(GeV/c);mass(GeV/c^{2})",700,-3.5,3.5,120,0,12,360,1.08,1.16);
+  
+  }
+  
+  XiDaughter = fs->make<TH3D>("XiDaughter",";eta;pT(GeV/c);mass(GeV/c^{2})",700,-3.5,3.5,120,0,12,360,1.08,1.16);
 
   vertexDistZ = fs->make<TH1D>("vertexDistZ",";Vz;#Events",100,-15,15);
   multiDist = fs->make<TH1D>("multiDist",";mult;#Events",300,0,300);
   xiMass = fs->make<TH1D>("xiMass",";mass",360,1.28,1.36);
-  ks_ptRapidity = fs->make<TH2D>("ks_ptRapidity",";rapidity;pT(GeV/c)",350,-2.5,3.5,120,0,12);
-  la_ptRapidity = fs->make<TH2D>("la_ptRapidity",";rapidity;pT(GeV/c)",350,-2.5,3.5,120,0,12);
+  ks_ptRapidity = fs->make<TH2D>("ks_ptRapidity",";rapidity;pT(GeV/c)",700,-3.5,3.5,120,0,12);
+  la_ptRapidity = fs->make<TH2D>("la_ptRapidity",";rapidity;pT(GeV/c)",700,-3.5,3.5,120,0,12);
+  etaDist = fs->make<TH1D>("etaDist",";eta",600,-3,3);
 
 
 }

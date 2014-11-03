@@ -80,8 +80,7 @@
 #include "DataFormats/Common/interface/TriggerResults.h"
 #include "DataFormats/VertexReco/interface/Vertex.h"
 #include "DataFormats/VertexReco/interface/VertexFwd.h"
-#include "DataFormats/HeavyIonEvent/interface/Centrality.h"
-#include "DataFormats/HeavyIonEvent/interface/CentralityProvider.h"
+
 #include "DataFormats/TrackerRecHit2D/interface/SiPixelRecHitCollection.h"
 
 #include "FWCore/Framework/interface/Frameworkfwd.h"
@@ -302,13 +301,10 @@ V0AnalyzerHisto::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
   const reco::Vertex & vtx = (*vertices)[0];
   bestvz = vtx.z(); bestvx = vtx.x(); bestvy = vtx.y();
   bestvzError = vtx.zError(); bestvxError = vtx.xError(); bestvyError = vtx.yError();
-
-
-  vertexDistZ->Fill( vtx.z() );
   
-
   //first selection; vertices
     if(bestvz < -15.0 || bestvz>15.0) return;
+
 
   Handle<reco::TrackCollection> tracks;
   iEvent.getByLabel(trackSrc_, tracks);
@@ -341,6 +337,8 @@ V0AnalyzerHisto::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
         
   } 
 
+
+
   if( doGenParticle_ ){
 
       edm::Handle<reco::GenParticleCollection> genParticleCollection;
@@ -351,7 +349,8 @@ V0AnalyzerHisto::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
         const reco::GenParticle & genCand = (*genParticleCollection)[it];
         int id = genCand.pdgId();
         int status = genCand.status();
-        double rpy_cm = genCand.rapidity()-0.47;
+        double rpy_cm = 0.0;
+        rpy_cm = genCand.rapidity()-0.47;
 
       if ( rpy_cm < -2.87 || rpy_cm > 1.93 ) continue;
 
@@ -407,7 +406,7 @@ V0AnalyzerHisto::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
 Filling multiplicity into 1D histogram:
  */
 
-multiDist->Fill( nTracks );
+//multiDist->Fill( nTracks );
 
 //multiplicity bins:
 //
@@ -423,31 +422,31 @@ if ( nTracks > multmin_ && nTracks < multmax_ ){
             auto dau1 = d1->get<reco::TrackRef>();
             auto dau2 = d2->get<reco::TrackRef>();
      
-            double eta_dau1 = d1->eta();
-            double phi_dau1 = d1->phi();
-            double pt_dau1 = d1->pt();
+            //double eta_dau1 = d1->eta();
+            //double phi_dau1 = d1->phi();
+            //double pt_dau1 = d1->pt();
             double px_dau1 = d1->px();
             double py_dau1 = d1->py();
             double pz_dau1 = d1->pz();
-            double charge_dau1 = d1->charge();  
-            double p_dau1 = d1->p();        
+           // double charge_dau1 = d1->charge();  
+            //double p_dau1 = d1->p();        
 
-            double eta_dau2 = d2->eta();
-            double phi_dau2 = d2->phi();
-            double pt_dau2 = d2->pt();
+           // double eta_dau2 = d2->eta();
+            //double phi_dau2 = d2->phi();
+            //double pt_dau2 = d2->pt();
             double px_dau2 = d2->px();
             double py_dau2 = d2->py();
             double pz_dau2 = d2->pz();    
-            double charge_dau2 = d2->charge();
-            double p_dau2 = d2->p();
+            //double charge_dau2 = d2->charge();
+            //double p_dau2 = d2->p();
 
             double ks_mass = trk.mass();
             double ks_pt = trk.pt();
             double ks_px = trk.px();
             double ks_py = trk.py();
             double ks_pz = trk.pz();
-            double ks_eta = trk.eta();
-            double ks_phi = trk.phi();
+            //double ks_eta = trk.eta();
+            //double ks_phi = trk.phi();
             double ks_y = trk.rapidity();
 
             //PAngle
@@ -527,32 +526,32 @@ if ( nTracks > multmin_ && nTracks < multmax_ ){
             auto dau1 = d1->get<reco::TrackRef>();
             auto dau2 = d2->get<reco::TrackRef>();
      
-            double eta_dau1 = d1->eta();
-            double phi_dau1 = d1->phi();
-            double pt_dau1 = d1->pt();
+            //double eta_dau1 = d1->eta();
+            //double phi_dau1 = d1->phi();
+            //double pt_dau1 = d1->pt();
             double px_dau1 = d1->px();
             double py_dau1 = d1->py();
             double pz_dau1 = d1->pz();
-            double charge_dau1 = d1->charge();  
-            double p_dau1 = d1->p();        
+            //double charge_dau1 = d1->charge();  
+            //double p_dau1 = d1->p();        
 
-            double eta_dau2 = d2->eta();
-            double phi_dau2 = d2->phi();
-            double pt_dau2 = d2->pt();
+            //double eta_dau2 = d2->eta();
+            //double phi_dau2 = d2->phi();
+            //double pt_dau2 = d2->pt();
             double px_dau2 = d2->px();
             double py_dau2 = d2->py();
             double pz_dau2 = d2->pz();    
-            double charge_dau2 = d2->charge();
-            double p_dau2 = d2->p();
+            //double charge_dau2 = d2->charge();
+            //double p_dau2 = d2->p();
 
             double la_mass = trk.mass();
             double la_pt = trk.pt();
             double la_px = trk.px();
             double la_py = trk.py();
             double la_pz = trk.pz();
-            double la_eta = trk.eta();
-            double la_phi = trk.phi();
-            double la_p = trk.p();
+            //double la_eta = trk.eta();
+            //double la_phi = trk.phi();
+            //double la_p = trk.p();
             double la_y = trk.rapidity();
 
             //PAngle
@@ -620,7 +619,7 @@ if ( nTracks > multmin_ && nTracks < multmax_ ){
 
                     const reco::VertexCompositeCandidate & trk = (*v0candidates_xi)[it];
                     const reco:: Candidate * d1 = trk.daughter(0);
-                    const reco:: Candidate * d2 = trk.daughter(1);
+                    //const reco:: Candidate * d2 = trk.daughter(1);
 
                     //PAngle
                     double secvz = trk.vz();
@@ -638,7 +637,7 @@ if ( nTracks > multmin_ && nTracks < multmax_ ){
 
                       if ( agl > 0.999 ){
 
-                        xiMass->Fill( trk.mass() );
+                        //xiMass->Fill( trk.mass() );
 
                           if ( trk.mass() > 1.31486 && trk.mass() < 1.33486 ){
 
@@ -667,24 +666,24 @@ V0AnalyzerHisto::beginJob()
     
   TH3D::SetDefaultSumw2();
 
-  InvMass_ks_underlying = fs->make<TH3D>("InvMass_ks_underlying",";eta;pT(GeV/c);mass(GeV/c^{2})",700,-3.5,3.5,120,0,12,360,0.44,0.56);
-  InvMass_la_underlying = fs->make<TH3D>("InvMass_la_underlying",";eta;pT(GeV/c);mass(GeV/c^{2})",700,-3.5,3.5,120,0,12,360,1.08,1.16);
+  InvMass_ks_underlying = fs->make<TH3D>("InvMass_ks_underlying",";eta;pT(GeV/c);mass(GeV/c^{2})",70,-3.5,3.5,120,0,12,360,0.44,0.56);
+  InvMass_la_underlying = fs->make<TH3D>("InvMass_la_underlying",";eta;pT(GeV/c);mass(GeV/c^{2})",70,-3.5,3.5,120,0,12,360,1.08,1.16);
   
   if(doGenParticle_){
 
-    genKS_underlying = fs->make<TH3D>("genKS_underlying",";eta;pT(GeV/c);mass(GeV/c^{2})",700,-3.5,3.5,120,0,12,360,0.44,0.56);
-    genLA_underlying = fs->make<TH3D>("genLA_underlying",";eta;pT(GeV/c);mass(GeV/c^{2})",700,-3.5,3.5,120,0,12,360,1.08,1.16);
+    genKS_underlying = fs->make<TH3D>("genKS_underlying",";eta;pT(GeV/c);mass(GeV/c^{2})",70,-3.5,3.5,120,0,12,360,0.44,0.56);
+    genLA_underlying = fs->make<TH3D>("genLA_underlying",";eta;pT(GeV/c);mass(GeV/c^{2})",70,-3.5,3.5,120,0,12,360,1.08,1.16);
   
   }
   
-  XiDaughter = fs->make<TH3D>("XiDaughter",";eta;pT(GeV/c);mass(GeV/c^{2})",700,-3.5,3.5,120,0,12,360,1.08,1.16);
+  XiDaughter = fs->make<TH3D>("XiDaughter",";eta;pT(GeV/c);mass(GeV/c^{2})",70,-3.5,3.5,120,0,12,360,1.08,1.16);
 
-  vertexDistZ = fs->make<TH1D>("vertexDistZ",";Vz;#Events",100,-15,15);
-  multiDist = fs->make<TH1D>("multiDist",";mult;#Events",300,0,300);
+  //vertexDistZ = fs->make<TH1D>("vertexDistZ",";Vz;#Events",100,-15,15);
+  //multiDist = fs->make<TH1D>("multiDist",";mult;#Events",300,0,300);
   xiMass = fs->make<TH1D>("xiMass",";mass",360,1.28,1.36);
   ks_ptRapidity = fs->make<TH2D>("ks_ptRapidity",";rapidity;pT(GeV/c)",700,-3.5,3.5,120,0,12);
   la_ptRapidity = fs->make<TH2D>("la_ptRapidity",";rapidity;pT(GeV/c)",700,-3.5,3.5,120,0,12);
-  etaDist = fs->make<TH1D>("etaDist",";eta",600,-3,3);
+  etaDist = fs->make<TH1D>("etaDist",";eta",60,-3,3);
 
 
 }

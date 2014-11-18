@@ -176,6 +176,7 @@ private:
   std::string jetSrc_;
   int multmin_;
   int multmax_;
+  int mult_;
 
   bool doGenParticle_;
   
@@ -187,14 +188,28 @@ private:
   TH3D* genKS_underlying;
   TH3D* genLA_underlying;
 
+  TH2D* dl_pt_ks;
+  TH2D* dl_pt_la;
+
   TH1D* vertexDistZ;
-  TH1D* xiMass;
+  TH1D* vertexReweight[8];
 
   TH2D* ks_ptRapidity;
   TH2D* la_ptRapidity;
 
+  TH2D* vxy;
+  TH2D* decaylength;
+  TH2D* pointAngle;
+  TH2D* DCA_xy_1;
+  TH2D* DCA_xy_2;
+  TH2D* DCA_z_1;
+  TH2D* DCA_z_2;
+
   TH1D* multiDist;
   TH1D* etaDist;
+  TH1D* GENetaDist;
+
+  TH1D* eventNumber;
 
 
 };
@@ -225,6 +240,7 @@ V0AnalyzerHisto::V0AnalyzerHisto(const edm::ParameterSet& iConfig)
   genParticleSrc_ = iConfig.getParameter<edm::InputTag>("genParticleSrc");
   multmin_ = iConfig.getUntrackedParameter<int>("multmin", 120);
   multmax_ = iConfig.getUntrackedParameter<int>("multmax", 150); 
+  mult_ = iConfig.getUntrackedParameter<int>("mult",1);
 
   doGenParticle_ = iConfig.getUntrackedParameter<bool>("doGenParticle",false);
   
@@ -305,6 +321,8 @@ V0AnalyzerHisto::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
   //first selection; vertices
     if(bestvz < -15.0 || bestvz>15.0) return;
 
+    
+
 
   Handle<reco::TrackCollection> tracks;
   iEvent.getByLabel(trackSrc_, tracks);
@@ -337,9 +355,40 @@ V0AnalyzerHisto::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
         
   } 
 
+  //multiDist->Fill(nTracks);
 
 
-  if( doGenParticle_ ){
+  edm::Handle<reco::PFJetCollection> jets;
+  iEvent.getByLabel( jetSrc_ , jets);
+   // jetSrc = "ak5PFJets" inputTag (string);
+
+  edm::Handle<reco::VertexCompositeCandidateCollection> v0candidates_ks;
+    iEvent.getByLabel(generalV0_ks_,v0candidates_ks);
+    if(!v0candidates_ks.isValid()) return;
+    
+  edm::Handle<reco::VertexCompositeCandidateCollection> v0candidates_la;
+    iEvent.getByLabel(generalV0_la_,v0candidates_la);
+    if(!v0candidates_la.isValid()) return;
+
+  edm::Handle<reco::VertexCompositeCandidateCollection> v0candidates_xi;
+    iEvent.getByLabel(generalV0_xi_,v0candidates_xi);
+    if(!v0candidates_xi.isValid()) return;
+ 
+
+//multiplicity bins:
+//
+
+if ( nTracks > multmin_ && nTracks < multmax_ ){
+
+  eventNumber->Fill(1);
+
+  vxy->Fill( vtx.x(),vtx.y() );
+  vertexDistZ->Fill( vtx.z() );
+
+  double bin = vertexReweight[mult_]->FindBin( vtx.z() );
+  double weight = vertexReweight[mult_]->GetBinContent( bin );
+
+   if( doGenParticle_ ){
 
       edm::Handle<reco::GenParticleCollection> genParticleCollection;
       iEvent.getByLabel(genParticleSrc_, genParticleCollection);
@@ -350,15 +399,18 @@ V0AnalyzerHisto::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
         int id = genCand.pdgId();
         int status = genCand.status();
         double rpy_cm = 0.0;
-        rpy_cm = genCand.rapidity()-0.47;
+        rpy_cm = genCand.rapidity();
 
-      if ( rpy_cm < -2.87 || rpy_cm > 1.93 ) continue;
+        //GENetaDist->Fill( genCand.eta() );
+        //rpy_cm = -genCand.rapidity() - 0.47;
+
+      if ( rpy_cm < -2.4 || rpy_cm > 2.4 ) continue;
 
       if ( status == 1 ){
 
         if( id == 310 ){
 
-            genKS_underlying->Fill(rpy_cm, genCand.pt(), genCand.mass());
+            genKS_underlying->Fill(rpy_cm, genCand.pt(), genCand.mass(),weight);
         }
 
     //Finding mother:
@@ -377,7 +429,7 @@ V0AnalyzerHisto::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
 
           if (TMath::Abs(mid) != 3322 && TMath::Abs(mid) != 3312 && TMath::Abs(mid) != 3324 && TMath::Abs(mid) != 3314 && TMath::Abs(mid) != 3334){
 
-            genLA_underlying->Fill( rpy_cm, genCand.pt(), genCand.mass() );
+            genLA_underlying->Fill( rpy_cm, genCand.pt(), genCand.mass(), weight );
           }
         }
      
@@ -385,33 +437,6 @@ V0AnalyzerHisto::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
       }
 
   } 
-
-  edm::Handle<reco::PFJetCollection> jets;
-  iEvent.getByLabel( jetSrc_ , jets);
-   // jetSrc = "ak5PFJets" inputTag (string);
-
-  edm::Handle<reco::VertexCompositeCandidateCollection> v0candidates_ks;
-    iEvent.getByLabel(generalV0_ks_,v0candidates_ks);
-    if(!v0candidates_ks.isValid()) return;
-    
-  edm::Handle<reco::VertexCompositeCandidateCollection> v0candidates_la;
-    iEvent.getByLabel(generalV0_la_,v0candidates_la);
-    if(!v0candidates_la.isValid()) return;
-
-  edm::Handle<reco::VertexCompositeCandidateCollection> v0candidates_xi;
-    iEvent.getByLabel(generalV0_xi_,v0candidates_xi);
-    if(!v0candidates_xi.isValid()) return;
- 
-/*
-Filling multiplicity into 1D histogram:
- */
-
-//multiDist->Fill( nTracks );
-
-//multiplicity bins:
-//
-
-if ( nTracks > multmin_ && nTracks < multmax_ ){
 
     for(unsigned it=0; it<v0candidates_ks->size(); ++it){     
     
@@ -422,31 +447,20 @@ if ( nTracks > multmin_ && nTracks < multmax_ ){
             auto dau1 = d1->get<reco::TrackRef>();
             auto dau2 = d2->get<reco::TrackRef>();
      
-            //double eta_dau1 = d1->eta();
-            //double phi_dau1 = d1->phi();
-            //double pt_dau1 = d1->pt();
             double px_dau1 = d1->px();
             double py_dau1 = d1->py();
             double pz_dau1 = d1->pz();
-           // double charge_dau1 = d1->charge();  
-            //double p_dau1 = d1->p();        
-
-           // double eta_dau2 = d2->eta();
-            //double phi_dau2 = d2->phi();
-            //double pt_dau2 = d2->pt();
+           
             double px_dau2 = d2->px();
             double py_dau2 = d2->py();
             double pz_dau2 = d2->pz();    
-            //double charge_dau2 = d2->charge();
-            //double p_dau2 = d2->p();
 
             double ks_mass = trk.mass();
             double ks_pt = trk.pt();
             double ks_px = trk.px();
             double ks_py = trk.py();
             double ks_pz = trk.pz();
-            //double ks_eta = trk.eta();
-            //double ks_phi = trk.phi();
+           
             double ks_y = trk.rapidity();
 
             //PAngle
@@ -492,13 +506,20 @@ if ( nTracks > multmin_ && nTracks < multmax_ ){
             double dzos2 = dzbest2/dzerror2;
             double dxyos2 = dxybest2/dxyerror2;
 
-            ks_y = -ks_y - 0.47;
+            //ks_y = ks_y - 0.47;
 
             ks_ptRapidity->Fill(ks_y,ks_pt);
 
+            /*decaylength->Fill(nTracks,dlos);
+            pointAngle->Fill(nTracks,agl);
+            DCA_xy_1->Fill(nTracks,TMath::Abs(dxyos1));
+            DCA_xy_2->Fill(nTracks,TMath::Abs(dxyos2));
+            DCA_z_1->Fill(nTracks,TMath::Abs(dzos1));
+            DCA_z_2->Fill(nTracks,TMath::Abs(dzos2));
+*/
             //InvMass_ks_underlying->Fill(ks_eta,ks_pt,ks_mass);
             
-            if (dau1_Nhits > 3 && dau2_Nhits > 3 && ks_y > -2.87 && ks_y < 1.93 && dlos > 5 && agl > 0.999 && TMath::Abs(dzos1) > 1 && 
+            if (dau1_Nhits > 3 && dau2_Nhits > 3 && ks_y > -2.4 && ks_y < 2.4 && dlos > 5 && agl > 0.999 && TMath::Abs(dzos1) > 1 && 
               TMath::Abs(dzos2) > 1 && TMath::Abs(dxyos1) > 1 && TMath::Abs(dxyos2) > 1)
             {
 
@@ -509,7 +530,9 @@ if ( nTracks > multmin_ && nTracks < multmax_ ){
                   if ((temp_reverse < 1.125683 && temp_reverse > 1.105683)) continue;
                   if ( temp_e < 0.015) continue;
 
-                  InvMass_ks_underlying->Fill(ks_y,ks_pt,ks_mass);
+                  dl_pt_ks->Fill(dlos,ks_pt);
+
+                  InvMass_ks_underlying->Fill(ks_y,ks_pt,ks_mass,weight);
 
                 
             }
@@ -526,32 +549,20 @@ if ( nTracks > multmin_ && nTracks < multmax_ ){
             auto dau1 = d1->get<reco::TrackRef>();
             auto dau2 = d2->get<reco::TrackRef>();
      
-            //double eta_dau1 = d1->eta();
-            //double phi_dau1 = d1->phi();
-            //double pt_dau1 = d1->pt();
             double px_dau1 = d1->px();
             double py_dau1 = d1->py();
             double pz_dau1 = d1->pz();
-            //double charge_dau1 = d1->charge();  
-            //double p_dau1 = d1->p();        
-
-            //double eta_dau2 = d2->eta();
-            //double phi_dau2 = d2->phi();
-            //double pt_dau2 = d2->pt();
+      
             double px_dau2 = d2->px();
             double py_dau2 = d2->py();
             double pz_dau2 = d2->pz();    
-            //double charge_dau2 = d2->charge();
-            //double p_dau2 = d2->p();
 
             double la_mass = trk.mass();
             double la_pt = trk.pt();
             double la_px = trk.px();
             double la_py = trk.py();
             double la_pz = trk.pz();
-            //double la_eta = trk.eta();
-            //double la_phi = trk.phi();
-            //double la_p = trk.p();
+        
             double la_y = trk.rapidity();
 
             //PAngle
@@ -597,14 +608,14 @@ if ( nTracks > multmin_ && nTracks < multmax_ ){
             double dzos2 = dzbest2/dzerror2;
             double dxyos2 = dxybest2/dxyerror2;
 
-            la_y = -la_y - 0.47;
+            //la_y = la_y - 0.47;
 
             la_ptRapidity->Fill(la_y,la_pt);
 
             //InvMass_la_underlying->Fill(la_eta,la_pt,la_mass);
 
             
-            if (dau1_Nhits > 3 && dau2_Nhits > 3 && la_y > -2.87 && la_y < 1.93 && dlos > 5 && agl > 0.999 && TMath::Abs(dzos1) > 1 && 
+            if (dau1_Nhits > 3 && dau2_Nhits > 3 && la_y > -2.4 && la_y < 2.4 && dlos > 5 && agl > 0.999 && TMath::Abs(dzos1) > 1 && 
               TMath::Abs(dzos2) > 1 && TMath::Abs(dxyos1) > 1 && TMath::Abs(dxyos2) > 1)
             {
 
@@ -613,7 +624,9 @@ if ( nTracks > multmin_ && nTracks < multmax_ ){
               if ( (temp < 0.517614 && temp > 0.477614) ) continue;
                   if ( temp_e < 0.015) continue;
 
-                  InvMass_la_underlying->Fill(la_y,la_pt,la_mass);
+                  dl_pt_la->Fill(dlos,la_pt);
+
+                  InvMass_la_underlying->Fill(la_y,la_pt,la_mass,weight);
 
                   for(unsigned it=0; it<v0candidates_xi->size(); ++it){
 
@@ -637,11 +650,9 @@ if ( nTracks > multmin_ && nTracks < multmax_ ){
 
                       if ( agl > 0.999 ){
 
-                        //xiMass->Fill( trk.mass() );
-
                           if ( trk.mass() > 1.31486 && trk.mass() < 1.33486 ){
 
-                            XiDaughter->Fill(la_y,la_pt,la_mass);
+                            XiDaughter->Fill(la_y,la_pt,la_mass,weight);
 
                     }
                       }
@@ -666,8 +677,51 @@ V0AnalyzerHisto::beginJob()
     
   TH3D::SetDefaultSumw2();
 
+  edm::FileInPath fip1("V0Analyzertest/V0Analyzer/data/vertexReweight_HijingPbPb_1.root");
+  TFile f1(fip1.fullPath().c_str(),"READ");
+  vertexReweight[0] = (TH1D*)f1.Get("vertexDistZ");
+
+  edm::FileInPath fip2("V0Analyzertest/V0Analyzer/data/vertexReweight_HijingPbPb_2.root");
+  TFile f2(fip2.fullPath().c_str(),"READ");
+  vertexReweight[1] = (TH1D*)f2.Get("vertexDistZ");
+
+  edm::FileInPath fip3("V0Analyzertest/V0Analyzer/data/vertexReweight_HijingPbPb_3.root");
+  TFile f3(fip3.fullPath().c_str(),"READ");
+  vertexReweight[2] = (TH1D*)f3.Get("vertexDistZ");
+
+  edm::FileInPath fip4("V0Analyzertest/V0Analyzer/data/vertexReweight_HijingPbPb_4.root");
+  TFile f4(fip4.fullPath().c_str(),"READ");
+  vertexReweight[3] = (TH1D*)f4.Get("vertexDistZ");
+
+  edm::FileInPath fip5("V0Analyzertest/V0Analyzer/data/vertexReweight_HijingPbPb_5.root");
+  TFile f5(fip5.fullPath().c_str(),"READ");
+  vertexReweight[4] = (TH1D*)f5.Get("vertexDistZ");
+
+  edm::FileInPath fip6("V0Analyzertest/V0Analyzer/data/vertexReweight_HijingPbPb_6.root");
+  TFile f6(fip6.fullPath().c_str(),"READ");
+  vertexReweight[5] = (TH1D*)f6.Get("vertexDistZ");
+
+  edm::FileInPath fip7("V0Analyzertest/V0Analyzer/data/vertexReweight_HijingPbPb_7.root");
+  TFile f7(fip7.fullPath().c_str(),"READ");
+  vertexReweight[6] = (TH1D*)f7.Get("vertexDistZ");
+
+  edm::FileInPath fip8("V0Analyzertest/V0Analyzer/data/vertexReweight_HijingPbPb_8.root");
+  TFile f8(fip8.fullPath().c_str(),"READ");
+  vertexReweight[7] = (TH1D*)f8.Get("vertexDistZ");
+
   InvMass_ks_underlying = fs->make<TH3D>("InvMass_ks_underlying",";eta;pT(GeV/c);mass(GeV/c^{2})",70,-3.5,3.5,120,0,12,360,0.44,0.56);
   InvMass_la_underlying = fs->make<TH3D>("InvMass_la_underlying",";eta;pT(GeV/c);mass(GeV/c^{2})",70,-3.5,3.5,120,0,12,360,1.08,1.16);
+
+  dl_pt_ks = fs->make<TH2D>("dl_pt_ks",";pT(GeV/c);decay length significance",120,0,12,100,0,15);
+  dl_pt_la = fs->make<TH2D>("dl_pt_la",";pT(GeV/c);decay length significance",120,0,12,100,0,15);
+
+  vxy = fs->make<TH2D>("vxy",";vx;vy",100,0,1,100,0,1);
+  //decaylength = fs->make<TH2D>("decaylength",";Ntrk;dlos",100,0,10);
+  //pointAngle = fs->make<TH2D>("pointAngle",";Ntrk;agl",300,-1.2,1.2);
+  //DCA_xy_1 = fs->make<TH2D>("DCA_xy_1",";Ntrk;dxyos1",100,0,10);
+  //DCA_xy_2 = fs->make<TH2D>("DCA_xy_2",";Ntrk;dxyos2",100,0,10);
+  //DCA_z_1 = fs->make<TH2D>("DCA_z_1",";Ntrk;dzos1",100,0,10);
+  //DCA_z_2 = fs->make<TH2D>("DCA_z_2",";Ntrk;dzos2",100,0,10);
   
   if(doGenParticle_){
 
@@ -677,13 +731,13 @@ V0AnalyzerHisto::beginJob()
   }
   
   XiDaughter = fs->make<TH3D>("XiDaughter",";eta;pT(GeV/c);mass(GeV/c^{2})",70,-3.5,3.5,120,0,12,360,1.08,1.16);
-
-  //vertexDistZ = fs->make<TH1D>("vertexDistZ",";Vz;#Events",100,-15,15);
-  //multiDist = fs->make<TH1D>("multiDist",";mult;#Events",300,0,300);
-  xiMass = fs->make<TH1D>("xiMass",";mass",360,1.28,1.36);
+  vertexDistZ = fs->make<TH1D>("vertexDistZ",";Vz;#Events",100,-15,15);
   ks_ptRapidity = fs->make<TH2D>("ks_ptRapidity",";rapidity;pT(GeV/c)",700,-3.5,3.5,120,0,12);
   la_ptRapidity = fs->make<TH2D>("la_ptRapidity",";rapidity;pT(GeV/c)",700,-3.5,3.5,120,0,12);
   etaDist = fs->make<TH1D>("etaDist",";eta",60,-3,3);
+  //GENetaDist = fs->make<TH1D>("GENetaDist",";GENeta",60,-3,3);
+  eventNumber = fs->make<TH1D>("eventNumber",";event",10,0,10);
+  //multiDist = fs->make<TH1D>("multiDist",";Ntrk",1000,0,1000);
 
 
 }

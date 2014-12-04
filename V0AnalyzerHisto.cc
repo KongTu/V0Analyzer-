@@ -188,22 +188,15 @@ private:
   TH3D* genKS_underlying;
   TH3D* genLA_underlying;
 
-  TH2D* dl_pt_ks;
-  TH2D* dl_pt_la;
-
   TH1D* vertexDistZ;
-  TH1D* vertexReweight[8];
+  TH1D* vertexReweight;
 
-  TH2D* ks_ptRapidity;
-  TH2D* la_ptRapidity;
+  //TH1D* ks_res[15];
+  //TH1D* la_res[15];
 
-  TH2D* vxy;
-  TH2D* decaylength;
-  TH2D* pointAngle;
-  TH2D* DCA_xy_1;
-  TH2D* DCA_xy_2;
-  TH2D* DCA_z_1;
-  TH2D* DCA_z_2;
+  TH2D* ks_pTeta;
+  TH2D* la_pTeta;
+
 
   TH1D* multiDist;
   TH1D* etaDist;
@@ -322,8 +315,6 @@ V0AnalyzerHisto::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
     if(bestvz < -15.0 || bestvz>15.0) return;
 
     
-
-
   Handle<reco::TrackCollection> tracks;
   iEvent.getByLabel(trackSrc_, tracks);
 
@@ -382,12 +373,11 @@ if ( nTracks > multmin_ && nTracks < multmax_ ){
 
   eventNumber->Fill(1);
 
-  vxy->Fill( vtx.x(),vtx.y() );
   vertexDistZ->Fill( vtx.z() );
 
-  double bin = vertexReweight[mult_]->FindBin( vtx.z() );
-  double weight = vertexReweight[mult_]->GetBinContent( bin );
-
+  double bin = vertexReweight->FindBin( vtx.z() );
+  double weight = vertexReweight->GetBinContent( bin );
+  
    if( doGenParticle_ ){
 
       edm::Handle<reco::GenParticleCollection> genParticleCollection;
@@ -398,25 +388,53 @@ if ( nTracks > multmin_ && nTracks < multmax_ ){
         const reco::GenParticle & genCand = (*genParticleCollection)[it];
         int id = genCand.pdgId();
         int status = genCand.status();
-        double rpy_cm = 0.0;
-        rpy_cm = genCand.rapidity();
+        double genpt = genCand.pt();
+        double geneta = genCand.eta();
 
-        //GENetaDist->Fill( genCand.eta() );
-        //rpy_cm = -genCand.rapidity() - 0.47;
+      if ( geneta < -2.4 || geneta > 2.4 ) continue;
 
-      if ( rpy_cm < -2.4 || rpy_cm > 2.4 ) continue;
+      /*
+      select smear hist:
+       */
+    
 
       if ( status == 1 ){
 
         if( id == 310 ){
 
-            genKS_underlying->Fill(rpy_cm, genCand.pt(), genCand.mass(),weight);
+            /*for(int i = 2; i < 15; i++){
+
+
+              if( genCand.pt() > ptbins[i] && genCand.pt() < ptbins[i+1] ){
+
+                double temp = ks_res[i]->GetRandom();
+                double binNumber = ks_res[i]->FindBin(temp);
+                double shift = -0.3 + (binNumber*0.01);
+
+                genpt = genCand.pt() + shift;
+              }
+
+            }*/
+
+            genKS_underlying->Fill(geneta, genpt, genCand.mass(),weight);
         }
 
     //Finding mother:
-
         int mid = 0;
         if( TMath::Abs(id) == 3122 ){
+
+           /*for(int i = 2; i < 15; i++){
+
+              if( genCand.pt() > ptbins[i] && genCand.pt() < ptbins[i+1] ){
+
+                double temp = la_res[i]->GetRandom();
+                double binNumber = la_res[i]->FindBin(temp);
+                double shift = -0.3 + (binNumber*0.01);
+
+                genpt = genCand.pt() + shift;
+              }
+              
+            }*/
 
           if(genCand.numberOfMothers()==1){
             const reco::Candidate * mom = genCand.mother();
@@ -429,7 +447,7 @@ if ( nTracks > multmin_ && nTracks < multmax_ ){
 
           if (TMath::Abs(mid) != 3322 && TMath::Abs(mid) != 3312 && TMath::Abs(mid) != 3324 && TMath::Abs(mid) != 3314 && TMath::Abs(mid) != 3334){
 
-            genLA_underlying->Fill( rpy_cm, genCand.pt(), genCand.mass(), weight );
+            genLA_underlying->Fill(geneta, genpt, genCand.mass(),weight);
           }
         }
      
@@ -460,8 +478,7 @@ if ( nTracks > multmin_ && nTracks < multmax_ ){
             double ks_px = trk.px();
             double ks_py = trk.py();
             double ks_pz = trk.pz();
-           
-            double ks_y = trk.rapidity();
+            double ks_eta = trk.eta();
 
             //PAngle
             double secvz = trk.vz();
@@ -506,20 +523,9 @@ if ( nTracks > multmin_ && nTracks < multmax_ ){
             double dzos2 = dzbest2/dzerror2;
             double dxyos2 = dxybest2/dxyerror2;
 
-            //ks_y = ks_y - 0.47;
-
-            ks_ptRapidity->Fill(ks_y,ks_pt);
-
-            /*decaylength->Fill(nTracks,dlos);
-            pointAngle->Fill(nTracks,agl);
-            DCA_xy_1->Fill(nTracks,TMath::Abs(dxyos1));
-            DCA_xy_2->Fill(nTracks,TMath::Abs(dxyos2));
-            DCA_z_1->Fill(nTracks,TMath::Abs(dzos1));
-            DCA_z_2->Fill(nTracks,TMath::Abs(dzos2));
-*/
-            //InvMass_ks_underlying->Fill(ks_eta,ks_pt,ks_mass);
-            
-            if (dau1_Nhits > 3 && dau2_Nhits > 3 && ks_y > -2.4 && ks_y < 2.4 && dlos > 5 && agl > 0.999 && TMath::Abs(dzos1) > 1 && 
+            ks_pTeta->Fill(ks_eta,ks_pt);
+   
+            if (dau1_Nhits > 3 && dau2_Nhits > 3 && ks_eta > -2.4 && ks_eta < 2.4 && dlos > 5 && agl > 0.999 && TMath::Abs(dzos1) > 1 && 
               TMath::Abs(dzos2) > 1 && TMath::Abs(dxyos1) > 1 && TMath::Abs(dxyos2) > 1)
             {
 
@@ -530,9 +536,7 @@ if ( nTracks > multmin_ && nTracks < multmax_ ){
                   if ((temp_reverse < 1.125683 && temp_reverse > 1.105683)) continue;
                   if ( temp_e < 0.015) continue;
 
-                  dl_pt_ks->Fill(dlos,ks_pt);
-
-                  InvMass_ks_underlying->Fill(ks_y,ks_pt,ks_mass,weight);
+                  InvMass_ks_underlying->Fill(ks_eta,ks_pt,ks_mass,weight);
 
                 
             }
@@ -562,9 +566,8 @@ if ( nTracks > multmin_ && nTracks < multmax_ ){
             double la_px = trk.px();
             double la_py = trk.py();
             double la_pz = trk.pz();
+            double la_eta = trk.eta();
         
-            double la_y = trk.rapidity();
-
             //PAngle
             double secvz = trk.vz();
             double secvx = trk.vx();
@@ -608,14 +611,9 @@ if ( nTracks > multmin_ && nTracks < multmax_ ){
             double dzos2 = dzbest2/dzerror2;
             double dxyos2 = dxybest2/dxyerror2;
 
-            //la_y = la_y - 0.47;
+            la_pTeta->Fill(la_eta,la_pt);
 
-            la_ptRapidity->Fill(la_y,la_pt);
-
-            //InvMass_la_underlying->Fill(la_eta,la_pt,la_mass);
-
-            
-            if (dau1_Nhits > 3 && dau2_Nhits > 3 && la_y > -2.4 && la_y < 2.4 && dlos > 5 && agl > 0.999 && TMath::Abs(dzos1) > 1 && 
+            if (dau1_Nhits > 3 && dau2_Nhits > 3 && la_eta > -2.4 && la_eta < 2.4 && dlos > 5 && agl > 0.999 && TMath::Abs(dzos1) > 1 && 
               TMath::Abs(dzos2) > 1 && TMath::Abs(dxyos1) > 1 && TMath::Abs(dxyos2) > 1)
             {
 
@@ -624,9 +622,7 @@ if ( nTracks > multmin_ && nTracks < multmax_ ){
               if ( (temp < 0.517614 && temp > 0.477614) ) continue;
                   if ( temp_e < 0.015) continue;
 
-                  dl_pt_la->Fill(dlos,la_pt);
-
-                  InvMass_la_underlying->Fill(la_y,la_pt,la_mass,weight);
+                  InvMass_la_underlying->Fill(la_eta,la_pt,la_mass,weight);
 
                   for(unsigned it=0; it<v0candidates_xi->size(); ++it){
 
@@ -652,7 +648,7 @@ if ( nTracks > multmin_ && nTracks < multmax_ ){
 
                           if ( trk.mass() > 1.31486 && trk.mass() < 1.33486 ){
 
-                            XiDaughter->Fill(la_y,la_pt,la_mass,weight);
+                            XiDaughter->Fill(la_eta,la_pt,la_mass,weight);
 
                     }
                       }
@@ -677,51 +673,21 @@ V0AnalyzerHisto::beginJob()
     
   TH3D::SetDefaultSumw2();
 
-  edm::FileInPath fip1("V0Analyzertest/V0Analyzer/data/vertexReweight_HijingPbPb_1.root");
+  /*edm::FileInPath fip1("V0Analyzertest/V0Analyzer/data/momentumResSmearHist.root");
   TFile f1(fip1.fullPath().c_str(),"READ");
-  vertexReweight[0] = (TH1D*)f1.Get("vertexDistZ");
+  for(int pt = 0; pt < 15; pt++){
 
-  edm::FileInPath fip2("V0Analyzertest/V0Analyzer/data/vertexReweight_HijingPbPb_2.root");
+    ks_res[pt] = (TH1D*)f1.Get(Form("ks_%d",pt));
+    la_res[pt] = (TH1D*)f1.Get(Form("lam_%d",pt));
+
+  }*/
+
+  edm::FileInPath fip2("V0Analyzertest/V0Analyzer/data/vertex_epos.root");
   TFile f2(fip2.fullPath().c_str(),"READ");
-  vertexReweight[1] = (TH1D*)f2.Get("vertexDistZ");
-
-  edm::FileInPath fip3("V0Analyzertest/V0Analyzer/data/vertexReweight_HijingPbPb_3.root");
-  TFile f3(fip3.fullPath().c_str(),"READ");
-  vertexReweight[2] = (TH1D*)f3.Get("vertexDistZ");
-
-  edm::FileInPath fip4("V0Analyzertest/V0Analyzer/data/vertexReweight_HijingPbPb_4.root");
-  TFile f4(fip4.fullPath().c_str(),"READ");
-  vertexReweight[3] = (TH1D*)f4.Get("vertexDistZ");
-
-  edm::FileInPath fip5("V0Analyzertest/V0Analyzer/data/vertexReweight_HijingPbPb_5.root");
-  TFile f5(fip5.fullPath().c_str(),"READ");
-  vertexReweight[4] = (TH1D*)f5.Get("vertexDistZ");
-
-  edm::FileInPath fip6("V0Analyzertest/V0Analyzer/data/vertexReweight_HijingPbPb_6.root");
-  TFile f6(fip6.fullPath().c_str(),"READ");
-  vertexReweight[5] = (TH1D*)f6.Get("vertexDistZ");
-
-  edm::FileInPath fip7("V0Analyzertest/V0Analyzer/data/vertexReweight_HijingPbPb_7.root");
-  TFile f7(fip7.fullPath().c_str(),"READ");
-  vertexReweight[6] = (TH1D*)f7.Get("vertexDistZ");
-
-  edm::FileInPath fip8("V0Analyzertest/V0Analyzer/data/vertexReweight_HijingPbPb_8.root");
-  TFile f8(fip8.fullPath().c_str(),"READ");
-  vertexReweight[7] = (TH1D*)f8.Get("vertexDistZ");
+  vertexReweight = (TH1D*)f2.Get("data");
 
   InvMass_ks_underlying = fs->make<TH3D>("InvMass_ks_underlying",";eta;pT(GeV/c);mass(GeV/c^{2})",70,-3.5,3.5,120,0,12,360,0.44,0.56);
   InvMass_la_underlying = fs->make<TH3D>("InvMass_la_underlying",";eta;pT(GeV/c);mass(GeV/c^{2})",70,-3.5,3.5,120,0,12,360,1.08,1.16);
-
-  dl_pt_ks = fs->make<TH2D>("dl_pt_ks",";pT(GeV/c);decay length significance",120,0,12,100,0,15);
-  dl_pt_la = fs->make<TH2D>("dl_pt_la",";pT(GeV/c);decay length significance",120,0,12,100,0,15);
-
-  vxy = fs->make<TH2D>("vxy",";vx;vy",100,0,1,100,0,1);
-  //decaylength = fs->make<TH2D>("decaylength",";Ntrk;dlos",100,0,10);
-  //pointAngle = fs->make<TH2D>("pointAngle",";Ntrk;agl",300,-1.2,1.2);
-  //DCA_xy_1 = fs->make<TH2D>("DCA_xy_1",";Ntrk;dxyos1",100,0,10);
-  //DCA_xy_2 = fs->make<TH2D>("DCA_xy_2",";Ntrk;dxyos2",100,0,10);
-  //DCA_z_1 = fs->make<TH2D>("DCA_z_1",";Ntrk;dzos1",100,0,10);
-  //DCA_z_2 = fs->make<TH2D>("DCA_z_2",";Ntrk;dzos2",100,0,10);
   
   if(doGenParticle_){
 
@@ -732,13 +698,10 @@ V0AnalyzerHisto::beginJob()
   
   XiDaughter = fs->make<TH3D>("XiDaughter",";eta;pT(GeV/c);mass(GeV/c^{2})",70,-3.5,3.5,120,0,12,360,1.08,1.16);
   vertexDistZ = fs->make<TH1D>("vertexDistZ",";Vz;#Events",100,-15,15);
-  ks_ptRapidity = fs->make<TH2D>("ks_ptRapidity",";rapidity;pT(GeV/c)",700,-3.5,3.5,120,0,12);
-  la_ptRapidity = fs->make<TH2D>("la_ptRapidity",";rapidity;pT(GeV/c)",700,-3.5,3.5,120,0,12);
+  ks_pTeta = fs->make<TH2D>("ks_pTeta",";#eta;pT(GeV/c)",700,-3.5,3.5,120,0,12);
+  la_pTeta = fs->make<TH2D>("la_pTeta",";#eta;pT(GeV/c)",700,-3.5,3.5,120,0,12);
   etaDist = fs->make<TH1D>("etaDist",";eta",60,-3,3);
-  //GENetaDist = fs->make<TH1D>("GENetaDist",";GENeta",60,-3,3);
   eventNumber = fs->make<TH1D>("eventNumber",";event",10,0,10);
-  //multiDist = fs->make<TH1D>("multiDist",";Ntrk",1000,0,1000);
-
 
 }
 
